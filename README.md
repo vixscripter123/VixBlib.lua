@@ -165,48 +165,47 @@ function VixBlib:CreateWindow(config)
     local minimized = false
     minBtn.MouseButton1Click:Connect(function()
         minimized = not minimized
-        local targetSize = minimized and UDim2.new(0, 300, 0, 45) or UDim2.new(0, 850, 0, 520)
         
         if minimized then
-            -- Esconder TODOS os elementos exceto topBar
+            -- Ao minimizar: esconder TUDO exceto topBar
+            mainFrame.Size = UDim2.new(0, 300, 0, 45)
+            sidePanel.Visible = false
+            contentFrame.Visible = false
+            
+            -- Força esconder todos os elementos filhos do mainFrame
             for _, child in pairs(mainFrame:GetChildren()) do
-                if child ~= topBar and child ~= shadow and child:IsA("GuiObject") then
+                if child.Name ~= "Frame" or child == topBar then -- Manter apenas topBar
+                    -- Skip topBar
+                elseif child:IsA("GuiObject") then
                     child.Visible = false
                 end
             end
-            -- Também esconder todos os filhos profundos
-            sidePanel.Visible = false
-            contentFrame.Visible = false
-            abaContainer.Visible = false
-            for _, aba in pairs(window.Abas) do
-                if aba.Frame then
-                    aba.Frame.Visible = false
+            
+        else
+            -- Ao maximizar: primeiro redimensionar, depois mostrar
+            mainFrame.Size = UDim2.new(0, 850, 0, 520)
+            
+            -- Pequeno delay para garantir que o redimensionamento aconteceu
+            wait(0.1)
+            
+            sidePanel.Visible = true
+            contentFrame.Visible = true
+            
+            -- Restaurar visibilidade dos elementos
+            for _, child in pairs(mainFrame:GetChildren()) do
+                if child ~= topBar and child:IsA("GuiObject") then
+                    child.Visible = true
                 end
             end
             
-            local tween = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = targetSize})
-            tween:Play()
-        else
-            -- Aumentar tamanho primeiro, depois mostrar elementos
-            local tween = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = targetSize})
-            tween:Play()
-            tween.Completed:Connect(function()
-                -- Restaurar todos os elementos
-                for _, child in pairs(mainFrame:GetChildren()) do
-                    if child ~= topBar and child ~= shadow and child:IsA("GuiObject") then
-                        child.Visible = true
-                    end
+            -- Restaurar aba ativa
+            for _, aba in pairs(window.Abas) do
+                if aba.Button.BackgroundColor3 == Color3.fromRGB(70, 70, 100) then
+                    aba.Frame.Visible = true
+                else
+                    aba.Frame.Visible = false
                 end
-                sidePanel.Visible = true
-                contentFrame.Visible = true
-                abaContainer.Visible = true
-                -- Restaurar aba ativa
-                for _, aba in pairs(window.Abas) do
-                    if aba.Button.BackgroundColor3 == Color3.fromRGB(70, 70, 100) then
-                        aba.Frame.Visible = true
-                    end
-                end
-            end)
+            end
         end
     end)
 
