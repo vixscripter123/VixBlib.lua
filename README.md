@@ -25,6 +25,7 @@ function VixBlib:CreateWindow(config)
     mainFrame.BackgroundTransparency = 0.1
     mainFrame.BorderSizePixel = 0
     mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    mainFrame.ClipsDescendants = true  -- IMPORTANTE: Corta qualquer coisa que saia dos limites
     mainFrame.Parent = gui
 
     local mainCorner = Instance.new("UICorner")
@@ -167,9 +168,22 @@ function VixBlib:CreateWindow(config)
         local targetSize = minimized and UDim2.new(0, 850, 0, 45) or UDim2.new(0, 850, 0, 520)
         
         if minimized then
-            -- Esconder elementos primeiro, depois reduzir tamanho
+            -- Esconder TODOS os elementos exceto topBar
+            for _, child in pairs(mainFrame:GetChildren()) do
+                if child ~= topBar and child ~= shadow and child:IsA("GuiObject") then
+                    child.Visible = false
+                end
+            end
+            -- Também esconder todos os filhos profundos
             sidePanel.Visible = false
             contentFrame.Visible = false
+            abaContainer.Visible = false
+            for _, aba in pairs(window.Abas) do
+                if aba.Frame then
+                    aba.Frame.Visible = false
+                end
+            end
+            
             local tween = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = targetSize})
             tween:Play()
         else
@@ -177,8 +191,21 @@ function VixBlib:CreateWindow(config)
             local tween = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = targetSize})
             tween:Play()
             tween.Completed:Connect(function()
+                -- Restaurar todos os elementos
+                for _, child in pairs(mainFrame:GetChildren()) do
+                    if child ~= topBar and child ~= shadow and child:IsA("GuiObject") then
+                        child.Visible = true
+                    end
+                end
                 sidePanel.Visible = true
                 contentFrame.Visible = true
+                abaContainer.Visible = true
+                -- Restaurar aba ativa
+                for _, aba in pairs(window.Abas) do
+                    if aba.Button.BackgroundColor3 == Color3.fromRGB(70, 70, 100) then
+                        aba.Frame.Visible = true
+                    end
+                end
             end)
         end
     end)
