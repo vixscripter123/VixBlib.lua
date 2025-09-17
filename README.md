@@ -9,155 +9,85 @@ local UserInputService = game:GetService("UserInputService")
 
 function VixBlib:CreateBolinha(config)
     local bolinha = {}
-    local dragging = false
-    local dragStart = nil
-    local startPos = nil
     
-    -- Configurações padrão
+    -- Configurações
     local cor = config.Cor or Color3.fromRGB(100, 200, 255)
     local tamanho = config.Tamanho or 60
     local posicao = config.Posicao or {X = 100, Y = 100}
     
-    -- Criar ScreenGui para a bolinha
-    local bolinhaGui = Instance.new("ScreenGui")
-    bolinhaGui.Name = "VixBolinhaToggle"
-    bolinhaGui.ResetOnSpawn = false
-    bolinhaGui.Parent = PlayerGui
+    -- Criar ScreenGui
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "VixBolinhaToggle"
+    gui.ResetOnSpawn = false
+    gui.Parent = PlayerGui
     
-    -- Frame da bolinha
-    local bolinhaFrame = Instance.new("Frame")
-    bolinhaFrame.Size = UDim2.new(0, tamanho, 0, tamanho)
-    bolinhaFrame.Position = UDim2.new(0, posicao.X, 0, posicao.Y)
-    bolinhaFrame.BackgroundColor3 = cor
-    bolinhaFrame.BackgroundTransparency = 0.1
-    bolinhaFrame.BorderSizePixel = 0
-    bolinhaFrame.Parent = bolinhaGui
+    -- Frame principal da bolinha
+    local frame = Instance.new("TextButton")
+    frame.Size = UDim2.new(0, tamanho, 0, tamanho)
+    frame.Position = UDim2.new(0, posicao.X, 0, posicao.Y)
+    frame.BackgroundColor3 = cor
+    frame.BorderSizePixel = 0
+    frame.Text = "≡"
+    frame.TextColor3 = Color3.fromRGB(255, 255, 255)
+    frame.TextScaled = true
+    frame.Font = Enum.Font.GothamBold
+    frame.Parent = gui
     
     -- Fazer redonda
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0.5, 0)
-    corner.Parent = bolinhaFrame
+    corner.Parent = frame
     
-    -- Efeito de brilho
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(255, 255, 255)
-    stroke.Transparency = 0.5
-    stroke.Thickness = 2
-    stroke.Parent = bolinhaFrame
+    -- Variáveis para arrastar
+    local dragging = false
+    local dragStart = nil
+    local startPos = nil
     
-    -- Gradiente
-    local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.new(1.2, 1.2, 1.2)),
-        ColorSequenceKeypoint.new(1, Color3.new(0.8, 0.8, 0.8))
-    }
-    gradient.Rotation = 45
-    gradient.Parent = bolinhaFrame
-    
-    -- Botão invisível para clique
-    local clickButton = Instance.new("TextButton")
-    clickButton.Size = UDim2.new(1, 0, 1, 0)
-    clickButton.BackgroundTransparency = 1
-    clickButton.Text = ""
-    clickButton.Parent = bolinhaFrame
-    
-    -- Ícone no centro
-    local icon = Instance.new("TextLabel")
-    icon.Size = UDim2.new(1, 0, 1, 0)
-    icon.BackgroundTransparency = 1
-    icon.Text = "≡"
-    icon.TextColor3 = Color3.fromRGB(255, 255, 255)
-    icon.TextScaled = true
-    icon.Font = Enum.Font.GothamBold
-    icon.Parent = bolinhaFrame
-    
-    -- Efeitos hover
-    clickButton.MouseEnter:Connect(function()
-        TweenService:Create(bolinhaFrame, TweenInfo.new(0.2), {
-            Size = UDim2.new(0, tamanho * 1.1, 0, tamanho * 1.1),
-            BackgroundTransparency = 0.05
-        }):Play()
-        TweenService:Create(stroke, TweenInfo.new(0.2), {Transparency = 0.3}):Play()
+    -- Sistema de arrastar
+    frame.MouseButton1Down:Connect(function()
+        dragging = true
+        local mouse = Players.LocalPlayer:GetMouse()
+        dragStart = Vector2.new(mouse.X, mouse.Y)
+        startPos = frame.Position
     end)
     
-    clickButton.MouseLeave:Connect(function()
-        if not dragging then
-            TweenService:Create(bolinhaFrame, TweenInfo.new(0.2), {
-                Size = UDim2.new(0, tamanho, 0, tamanho),
-                BackgroundTransparency = 0.1
-            }):Play()
-            TweenService:Create(stroke, TweenInfo.new(0.2), {Transparency = 0.5}):Play()
-        end
-    end)
-    
-    -- Sistema de arrastar corrigido
-    clickButton.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = bolinhaFrame.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                    -- Reset do tamanho quando para de arrastar
-                    TweenService:Create(bolinhaFrame, TweenInfo.new(0.2), {
-                        Size = UDim2.new(0, tamanho, 0, tamanho),
-                        BackgroundTransparency = 0.1
-                    }):Play()
-                end
-            end)
-        end
-    end)
-    
-    -- Usar UserInputService para movimento global
     UserInputService.InputChanged:Connect(function(input)
         if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            bolinhaFrame.Position = UDim2.new(
-                startPos.X.Scale, 
-                startPos.X.Offset + delta.X, 
-                startPos.Y.Scale, 
-                startPos.Y.Offset + delta.Y
-            )
+            local mouse = Players.LocalPlayer:GetMouse()
+            local delta = Vector2.new(mouse.X, mouse.Y) - dragStart
+            frame.Position = UDim2.new(0, startPos.X.Offset + delta.X, 0, startPos.Y.Offset + delta.Y)
         end
     end)
     
-    -- Variável para armazenar a janela conectada
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    
+    -- Variável para janela conectada
     local windowConnected = nil
     
-    -- Função para conectar com uma janela
+    -- Conectar com janela
     function bolinha:ConectarJanela(window)
         windowConnected = window
-        
-        clickButton.MouseButton1Click:Connect(function()
-            if not dragging and windowConnected then
-                local mainFrame = windowConnected.mainFrame
-                if mainFrame then
-                    mainFrame.Visible = not mainFrame.Visible
-                    
-                    -- Efeito de clique
-                    TweenService:Create(bolinhaFrame, TweenInfo.new(0.1), {
-                        Size = UDim2.new(0, tamanho * 0.9, 0, tamanho * 0.9)
-                    }):Play()
-                    
-                    wait(0.1)
-                    TweenService:Create(bolinhaFrame, TweenInfo.new(0.1), {
-                        Size = UDim2.new(0, tamanho, 0, tamanho)
-                    }):Play()
-                end
-            end
-        end)
     end
     
-    -- Função para mudar cor
+    -- Click para abrir/fechar
+    frame.MouseButton1Click:Connect(function()
+        if windowConnected and windowConnected.mainFrame then
+            windowConnected.mainFrame.Visible = not windowConnected.mainFrame.Visible
+        end
+    end)
+    
+    -- Mudar cor
     function bolinha:MudarCor(novaCor)
-        TweenService:Create(bolinhaFrame, TweenInfo.new(0.3), {BackgroundColor3 = novaCor}):Play()
+        frame.BackgroundColor3 = novaCor
     end
     
-    -- Função para destruir
+    -- Destruir
     function bolinha:Destroy()
-        bolinhaGui:Destroy()
+        gui:Destroy()
     end
     
     return bolinha
