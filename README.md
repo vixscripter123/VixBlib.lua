@@ -1,12 +1,11 @@
---// Biblioteca VixBlib
-local VixBlib = {}
---// Biblioteca VixBlib Expandida
+--// Biblioteca VixBlib Corrigida
 local VixBlib = {}
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 function VixBlib:CreateWindow(config)
     local window = {}
@@ -27,14 +26,19 @@ function VixBlib:CreateWindow(config)
     mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     mainFrame.Parent = gui
 
-    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 8)
+    local mainCorner = Instance.new("UICorner")
+    mainCorner.CornerRadius = UDim.new(0, 8)
+    mainCorner.Parent = mainFrame
 
     local topBar = Instance.new("Frame")
     topBar.Size = UDim2.new(1, 0, 0, 30)
     topBar.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
     topBar.BorderSizePixel = 0
     topBar.Parent = mainFrame
-    Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 8)
+
+    local topCorner = Instance.new("UICorner")
+    topCorner.CornerRadius = UDim.new(0, 8)
+    topCorner.Parent = topBar
 
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(1, -60, 1, 0)
@@ -55,9 +59,16 @@ function VixBlib:CreateWindow(config)
     closeBtn.TextSize = 16
     closeBtn.BackgroundColor3 = Color3.fromRGB(60, 20, 20)
     closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeBtn.BorderSizePixel = 0
     closeBtn.Parent = topBar
-    Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 8)
-    closeBtn.MouseButton1Click:Connect(function() gui:Destroy() end)
+
+    local closeCorner = Instance.new("UICorner")
+    closeCorner.CornerRadius = UDim.new(0, 8)
+    closeCorner.Parent = closeBtn
+
+    closeBtn.MouseButton1Click:Connect(function()
+        gui:Destroy()
+    end)
 
     local minBtn = Instance.new("TextButton")
     minBtn.Size = UDim2.new(0, 30, 0, 30)
@@ -67,16 +78,20 @@ function VixBlib:CreateWindow(config)
     minBtn.TextSize = 16
     minBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
     minBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minBtn.BorderSizePixel = 0
     minBtn.Parent = topBar
-    Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0, 8)
+
+    local minCorner = Instance.new("UICorner")
+    minCorner.CornerRadius = UDim.new(0, 8)
+    minCorner.Parent = minBtn
 
     local minimized = false
     minBtn.MouseButton1Click:Connect(function()
         minimized = not minimized
         local targetSize = minimized and UDim2.new(0, 600, 0, 30) or UDim2.new(0, 600, 0, 350)
         
-        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), 
-            {Size = targetSize}):Play()
+        local tween = TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = targetSize})
+        tween:Play()
         
         for _, child in pairs(mainFrame:GetChildren()) do
             if child ~= topBar then 
@@ -93,9 +108,10 @@ function VixBlib:CreateWindow(config)
     abaList.BorderSizePixel = 0
     abaList.Parent = mainFrame
 
-    local abaLayout = Instance.new("UIListLayout", abaList)
+    local abaLayout = Instance.new("UIListLayout")
     abaLayout.SortOrder = Enum.SortOrder.LayoutOrder
     abaLayout.Padding = UDim.new(0, 2)
+    abaLayout.Parent = abaList
 
     -- Conteúdo
     local contentFrame = Instance.new("Frame")
@@ -124,7 +140,10 @@ function VixBlib:CreateWindow(config)
     playerImage.BackgroundTransparency = 1
     playerImage.Image = "https://www.roblox.com/headshot-thumbnail/image?userId="..LocalPlayer.UserId.."&width=100&height=100&format=png"
     playerImage.Parent = abaList
-    Instance.new("UICorner", playerImage).CornerRadius = UDim.new(0, 8)
+
+    local imgCorner = Instance.new("UICorner")
+    imgCorner.CornerRadius = UDim.new(0, 8)
+    imgCorner.Parent = playerImage
 
     local playerName = Instance.new("TextLabel")
     playerName.Size = UDim2.new(1, -70, 0, 50)
@@ -138,26 +157,30 @@ function VixBlib:CreateWindow(config)
     playerName.TextYAlignment = Enum.TextYAlignment.Center
     playerName.Parent = abaList
 
-    -- Arrastar
-    local UserInputService = game:GetService("UserInputService")
+    -- Sistema de arrastar
     topBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             dragStart = input.Position
             startPos = mainFrame.Position
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+                if input.UserInputState == Enum.UserInputState.End then 
+                    dragging = false 
+                end
             end)
         end
     end)
+
     topBar.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
+        if input.UserInputType == Enum.UserInputType.MouseMovement then 
+            dragInput = input 
+        end
     end)
+
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - dragStart
-            mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-                                           startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
 
@@ -173,8 +196,12 @@ function VixBlib:CreateWindow(config)
         btn.TextSize = 12
         btn.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.BorderSizePixel = 0
         btn.Parent = abaList
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+
+        local btnCorner = Instance.new("UICorner")
+        btnCorner.CornerRadius = UDim.new(0, 4)
+        btnCorner.Parent = btn
 
         local abaFrame = Instance.new("ScrollingFrame")
         abaFrame.Size = UDim2.new(1, 0, 1, -30)
@@ -187,9 +214,11 @@ function VixBlib:CreateWindow(config)
         abaFrame.Visible = false
         abaFrame.Parent = contentFrame
 
-        local layout = Instance.new("UIListLayout", abaFrame)
+        local layout = Instance.new("UIListLayout")
         layout.SortOrder = Enum.SortOrder.LayoutOrder
         layout.Padding = UDim.new(0, 8)
+        layout.Parent = abaFrame
+
         layout.Changed:Connect(function()
             abaFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
         end)
@@ -228,14 +257,24 @@ function VixBlib:CreateWindow(config)
             b.TextSize = 13
             b.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
             b.TextColor3 = Color3.fromRGB(255, 255, 255)
+            b.BorderSizePixel = 0
             b.Parent = abaFrame
             b.LayoutOrder = elementCount
-            Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+
+            local bCorner = Instance.new("UICorner")
+            bCorner.CornerRadius = UDim.new(0, 6)
+            bCorner.Parent = b
             
             b.MouseButton1Click:Connect(function()
-                TweenService:Create(b, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(70, 70, 120)}):Play()
-                wait(0.1)
-                TweenService:Create(b, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(50, 50, 80)}):Play()
+                local tween1 = TweenService:Create(b, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(70, 70, 120)})
+                tween1:Play()
+                
+                spawn(function()
+                    wait(0.1)
+                    local tween2 = TweenService:Create(b, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(50, 50, 80)})
+                    tween2:Play()
+                end)
+                
                 if callback then callback() end
             end)
         end
@@ -246,9 +285,13 @@ function VixBlib:CreateWindow(config)
             toggleFrame.Size = UDim2.new(1, -20, 0, 35)
             toggleFrame.Position = UDim2.new(0, 10, 0, 0)
             toggleFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+            toggleFrame.BorderSizePixel = 0
             toggleFrame.Parent = abaFrame
             toggleFrame.LayoutOrder = elementCount
-            Instance.new("UICorner", toggleFrame).CornerRadius = UDim.new(0, 6)
+
+            local toggleCorner = Instance.new("UICorner")
+            toggleCorner.CornerRadius = UDim.new(0, 6)
+            toggleCorner.Parent = toggleFrame
 
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(1, -60, 1, 0)
@@ -266,15 +309,23 @@ function VixBlib:CreateWindow(config)
             toggle.Position = UDim2.new(1, -50, 0.5, -10)
             toggle.Text = ""
             toggle.BackgroundColor3 = default and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(80, 80, 80)
+            toggle.BorderSizePixel = 0
             toggle.Parent = toggleFrame
-            Instance.new("UICorner", toggle).CornerRadius = UDim.new(0, 10)
+
+            local toggleBtnCorner = Instance.new("UICorner")
+            toggleBtnCorner.CornerRadius = UDim.new(0, 10)
+            toggleBtnCorner.Parent = toggle
 
             local circle = Instance.new("Frame")
             circle.Size = UDim2.new(0, 16, 0, 16)
             circle.Position = default and UDim2.new(0, 22, 0, 2) or UDim2.new(0, 2, 0, 2)
             circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            circle.BorderSizePixel = 0
             circle.Parent = toggle
-            Instance.new("UICorner", circle).CornerRadius = UDim.new(0, 8)
+
+            local circleCorner = Instance.new("UICorner")
+            circleCorner.CornerRadius = UDim.new(0, 8)
+            circleCorner.Parent = circle
 
             local toggled = default or false
 
@@ -283,8 +334,10 @@ function VixBlib:CreateWindow(config)
                 local newPos = toggled and UDim2.new(0, 22, 0, 2) or UDim2.new(0, 2, 0, 2)
                 local newColor = toggled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(80, 80, 80)
                 
-                TweenService:Create(circle, TweenInfo.new(0.2), {Position = newPos}):Play()
-                TweenService:Create(toggle, TweenInfo.new(0.2), {BackgroundColor3 = newColor}):Play()
+                local tween1 = TweenService:Create(circle, TweenInfo.new(0.2), {Position = newPos})
+                local tween2 = TweenService:Create(toggle, TweenInfo.new(0.2), {BackgroundColor3 = newColor})
+                tween1:Play()
+                tween2:Play()
                 
                 if callback then callback(toggled) end
             end)
@@ -294,8 +347,10 @@ function VixBlib:CreateWindow(config)
                     toggled = value
                     local newPos = toggled and UDim2.new(0, 22, 0, 2) or UDim2.new(0, 2, 0, 2)
                     local newColor = toggled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(80, 80, 80)
-                    TweenService:Create(circle, TweenInfo.new(0.2), {Position = newPos}):Play()
-                    TweenService:Create(toggle, TweenInfo.new(0.2), {BackgroundColor3 = newColor}):Play()
+                    local tween1 = TweenService:Create(circle, TweenInfo.new(0.2), {Position = newPos})
+                    local tween2 = TweenService:Create(toggle, TweenInfo.new(0.2), {BackgroundColor3 = newColor})
+                    tween1:Play()
+                    tween2:Play()
                 end
             }
         end
@@ -306,9 +361,13 @@ function VixBlib:CreateWindow(config)
             sliderFrame.Size = UDim2.new(1, -20, 0, 50)
             sliderFrame.Position = UDim2.new(0, 10, 0, 0)
             sliderFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+            sliderFrame.BorderSizePixel = 0
             sliderFrame.Parent = abaFrame
             sliderFrame.LayoutOrder = elementCount
-            Instance.new("UICorner", sliderFrame).CornerRadius = UDim.new(0, 6)
+
+            local sliderCorner = Instance.new("UICorner")
+            sliderCorner.CornerRadius = UDim.new(0, 6)
+            sliderCorner.Parent = sliderFrame
 
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(1, -100, 0, 25)
@@ -336,23 +395,35 @@ function VixBlib:CreateWindow(config)
             sliderBar.Size = UDim2.new(1, -20, 0, 4)
             sliderBar.Position = UDim2.new(0, 10, 1, -15)
             sliderBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            sliderBar.BorderSizePixel = 0
             sliderBar.Parent = sliderFrame
-            Instance.new("UICorner", sliderBar).CornerRadius = UDim.new(0, 2)
+
+            local barCorner = Instance.new("UICorner")
+            barCorner.CornerRadius = UDim.new(0, 2)
+            barCorner.Parent = sliderBar
 
             local fillBar = Instance.new("Frame")
             fillBar.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
             fillBar.Position = UDim2.new(0, 0, 0, 0)
             fillBar.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
+            fillBar.BorderSizePixel = 0
             fillBar.Parent = sliderBar
-            Instance.new("UICorner", fillBar).CornerRadius = UDim.new(0, 2)
+
+            local fillCorner = Instance.new("UICorner")
+            fillCorner.CornerRadius = UDim.new(0, 2)
+            fillCorner.Parent = fillBar
 
             local slider = Instance.new("TextButton")
             slider.Size = UDim2.new(0, 16, 0, 16)
             slider.Position = UDim2.new((default - min) / (max - min), -8, 0, -6)
             slider.Text = ""
             slider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            slider.BorderSizePixel = 0
             slider.Parent = sliderBar
-            Instance.new("UICorner", slider).CornerRadius = UDim.new(0, 8)
+
+            local sliderBtnCorner = Instance.new("UICorner")
+            sliderBtnCorner.CornerRadius = UDim.new(0, 8)
+            sliderBtnCorner.Parent = slider
 
             local currentValue = default
             local dragging = false
@@ -392,196 +463,6 @@ function VixBlib:CreateWindow(config)
                     slider.Position = UDim2.new(relativePos, -8, 0, -6)
                 end
             }
-        end
-
-        return aba
-    end
-
-    return window
-end
-
-return VixBlib
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-
-function VixBlib:CreateWindow(config)
-    local window = {}
-    window.Abas = {}
-    local dragging, dragInput, dragStart, startPos
-
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "VixBlibUI"
-    gui.ResetOnSpawn = false
-    gui.Parent = PlayerGui
-
-    local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0, 600, 0, 350)
-    mainFrame.Position = UDim2.new(0.5, -300, 0.5, -175)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-    mainFrame.BorderSizePixel = 0
-    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    mainFrame.Parent = gui
-
-    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 8)
-
-    local topBar = Instance.new("Frame")
-    topBar.Size = UDim2.new(1, 0, 0, 30)
-    topBar.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
-    topBar.BorderSizePixel = 0
-    topBar.Parent = mainFrame
-
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, -60, 1, 0)
-    title.Position = UDim2.new(0, 10, 0, 0)
-    title.Text = config.Nome or "VixBlib"
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.BackgroundTransparency = 1
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 14
-    title.Parent = topBar
-
-    local closeBtn = Instance.new("TextButton")
-    closeBtn.Size = UDim2.new(0, 30, 0, 30)
-    closeBtn.Position = UDim2.new(1, -30, 0, 0)
-    closeBtn.Text = "X"
-    closeBtn.Font = Enum.Font.GothamBold
-    closeBtn.TextSize = 14
-    closeBtn.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
-    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeBtn.Parent = topBar
-    closeBtn.MouseButton1Click:Connect(function() gui:Destroy() end)
-
-    local minBtn = Instance.new("TextButton")
-    minBtn.Size = UDim2.new(0, 30, 0, 30)
-    minBtn.Position = UDim2.new(1, -60, 0, 0)
-    minBtn.Text = "-"
-    minBtn.Font = Enum.Font.GothamBold
-    minBtn.TextSize = 14
-    minBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
-    minBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    minBtn.Parent = topBar
-
-    local minimized = false
-    minBtn.MouseButton1Click:Connect(function()
-        minimized = not minimized
-        if minimized then
-            for _, child in pairs(mainFrame:GetChildren()) do
-                if child ~= topBar then child.Visible = false end
-            end
-            mainFrame.Size = UDim2.new(0, 600, 0, 30)
-        else
-            for _, child in pairs(mainFrame:GetChildren()) do
-                child.Visible = true
-            end
-            mainFrame.Size = UDim2.new(0, 600, 0, 350)
-        end
-    end)
-
-    -- Frame lateral (abas)
-    local abaList = Instance.new("Frame")
-    abaList.Size = UDim2.new(0, 120, 1, -30)
-    abaList.Position = UDim2.new(0, 0, 0, 30)
-    abaList.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
-    abaList.BorderSizePixel = 0
-    abaList.Parent = mainFrame
-    Instance.new("UIListLayout", abaList).SortOrder = Enum.SortOrder.LayoutOrder
-
-    -- Conteúdo
-    local contentFrame = Instance.new("Frame")
-    contentFrame.Size = UDim2.new(1, -120, 1, -30)
-    contentFrame.Position = UDim2.new(0, 120, 0, 30)
-    contentFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
-    contentFrame.BorderSizePixel = 0
-    contentFrame.Parent = mainFrame
-
-    -- Label do nome da aba selecionada
-    local abaTitle = Instance.new("TextLabel")
-    abaTitle.Size = UDim2.new(1, -20, 0, 30)
-    abaTitle.Position = UDim2.new(0, 10, 0, 0)
-    abaTitle.Text = ""
-    abaTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    abaTitle.BackgroundTransparency = 1
-    abaTitle.Font = Enum.Font.GothamBold
-    abaTitle.TextSize = 14
-    abaTitle.TextXAlignment = Enum.TextXAlignment.Left
-    abaTitle.Parent = contentFrame
-
-    -- Foto do jogador
-    local playerImage = Instance.new("ImageLabel")
-    playerImage.Size = UDim2.new(0, 50, 0, 50)
-    playerImage.Position = UDim2.new(0, 10, 1, -60)
-    playerImage.BackgroundTransparency = 1
-    playerImage.Image = "https://www.roblox.com/headshot-thumbnail/image?userId="..LocalPlayer.UserId.."&width=100&height=100&format=png"
-    playerImage.Parent = abaList
-
-    -- Arrastar
-    local UserInputService = game:GetService("UserInputService")
-    topBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = mainFrame.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
-            end)
-        end
-    end)
-    topBar.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-                                           startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-
-    function window:CreateAba(nome)
-        local aba = {}
-
-        local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, 0, 0, 30)
-        btn.Text = nome
-        btn.Font = Enum.Font.Gotham
-        btn.TextSize = 14
-        btn.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
-        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        btn.Parent = abaList
-
-        local abaFrame = Instance.new("Frame")
-        abaFrame.Size = UDim2.new(1, 0, 1, -30)
-        abaFrame.Position = UDim2.new(0, 0, 0, 30)
-        abaFrame.BackgroundTransparency = 1
-        abaFrame.Visible = false
-        abaFrame.Parent = contentFrame
-
-        btn.MouseButton1Click:Connect(function()
-            for _, other in pairs(window.Abas) do
-                other.Frame.Visible = false
-            end
-            abaFrame.Visible = true
-            abaTitle.Text = nome
-        end)
-
-        aba.Frame = abaFrame
-        table.insert(window.Abas, aba)
-
-        function aba:CreateButton(txt, callback)
-            local b = Instance.new("TextButton")
-            b.Size = UDim2.new(0, 200, 0, 30)
-            b.Position = UDim2.new(0, 10, 0, #abaFrame:GetChildren() * 35)
-            b.Text = txt
-            b.Font = Enum.Font.Gotham
-            b.TextSize = 14
-            b.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
-            b.TextColor3 = Color3.fromRGB(255, 255, 255)
-            b.Parent = abaFrame
-            b.MouseButton1Click:Connect(function()
-                if callback then callback() end
-            end)
         end
 
         return aba
