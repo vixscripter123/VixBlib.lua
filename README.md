@@ -61,7 +61,7 @@ function VixBlib:CreateBolinha(config)
     clickButton.Text = ""
     clickButton.Parent = bolinhaFrame
     
-    -- Ícone no centro (opcional)
+    -- Ícone no centro
     local icon = Instance.new("TextLabel")
     icon.Size = UDim2.new(1, 0, 1, 0)
     icon.BackgroundTransparency = 1
@@ -81,14 +81,16 @@ function VixBlib:CreateBolinha(config)
     end)
     
     clickButton.MouseLeave:Connect(function()
-        TweenService:Create(bolinhaFrame, TweenInfo.new(0.2), {
-            Size = UDim2.new(0, tamanho, 0, tamanho),
-            BackgroundTransparency = 0.1
-        }):Play()
-        TweenService:Create(stroke, TweenInfo.new(0.2), {Transparency = 0.5}):Play()
+        if not dragging then
+            TweenService:Create(bolinhaFrame, TweenInfo.new(0.2), {
+                Size = UDim2.new(0, tamanho, 0, tamanho),
+                BackgroundTransparency = 0.1
+            }):Play()
+            TweenService:Create(stroke, TweenInfo.new(0.2), {Transparency = 0.5}):Play()
+        end
     end)
     
-    -- Sistema de arrastar
+    -- Sistema de arrastar corrigido
     clickButton.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
@@ -98,40 +100,52 @@ function VixBlib:CreateBolinha(config)
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
+                    -- Reset do tamanho quando para de arrastar
+                    TweenService:Create(bolinhaFrame, TweenInfo.new(0.2), {
+                        Size = UDim2.new(0, tamanho, 0, tamanho),
+                        BackgroundTransparency = 0.1
+                    }):Play()
                 end
             end)
         end
     end)
     
-    clickButton.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            if dragging then
-                local delta = input.Position - dragStart
-                bolinhaFrame.Position = UDim2.new(
-                    startPos.X.Scale, 
-                    startPos.X.Offset + delta.X, 
-                    startPos.Y.Scale, 
-                    startPos.Y.Offset + delta.Y
-                )
-            end
+    -- Usar UserInputService para movimento global
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            bolinhaFrame.Position = UDim2.new(
+                startPos.X.Scale, 
+                startPos.X.Offset + delta.X, 
+                startPos.Y.Scale, 
+                startPos.Y.Offset + delta.Y
+            )
         end
     end)
     
+    -- Variável para armazenar a janela conectada
+    local windowConnected = nil
+    
     -- Função para conectar com uma janela
     function bolinha:ConectarJanela(window)
+        windowConnected = window
+        
         clickButton.MouseButton1Click:Connect(function()
-            if window and window.mainFrame then
-                window.mainFrame.Visible = not window.mainFrame.Visible
-                
-                -- Efeito de clique
-                TweenService:Create(bolinhaFrame, TweenInfo.new(0.1), {
-                    Size = UDim2.new(0, tamanho * 0.9, 0, tamanho * 0.9)
-                }):Play()
-                
-                wait(0.1)
-                TweenService:Create(bolinhaFrame, TweenInfo.new(0.1), {
-                    Size = UDim2.new(0, tamanho, 0, tamanho)
-                }):Play()
+            if not dragging and windowConnected then
+                local mainFrame = windowConnected.mainFrame
+                if mainFrame then
+                    mainFrame.Visible = not mainFrame.Visible
+                    
+                    -- Efeito de clique
+                    TweenService:Create(bolinhaFrame, TweenInfo.new(0.1), {
+                        Size = UDim2.new(0, tamanho * 0.9, 0, tamanho * 0.9)
+                    }):Play()
+                    
+                    wait(0.1)
+                    TweenService:Create(bolinhaFrame, TweenInfo.new(0.1), {
+                        Size = UDim2.new(0, tamanho, 0, tamanho)
+                    }):Play()
+                end
             end
         end)
     end
