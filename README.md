@@ -5,19 +5,16 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- Criar Janela
 function VixBlib:CreateWindow(config)
     local window = {}
     window.Abas = {}
     local dragging, dragInput, dragStart, startPos
 
-    -- ScreenGui
     local gui = Instance.new("ScreenGui")
     gui.Name = "VixBlibUI"
     gui.ResetOnSpawn = false
     gui.Parent = PlayerGui
 
-    -- Frame principal
     local mainFrame = Instance.new("Frame")
     mainFrame.Size = UDim2.new(0, 600, 0, 350)
     mainFrame.Position = UDim2.new(0.5, -300, 0.5, -175)
@@ -26,10 +23,8 @@ function VixBlib:CreateWindow(config)
     mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     mainFrame.Parent = gui
 
-    local corner = Instance.new("UICorner", mainFrame)
-    corner.CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 8)
 
-    -- Barra Superior
     local topBar = Instance.new("Frame")
     topBar.Size = UDim2.new(1, 0, 0, 30)
     topBar.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
@@ -47,7 +42,6 @@ function VixBlib:CreateWindow(config)
     title.TextSize = 14
     title.Parent = topBar
 
-    -- Botão Fechar
     local closeBtn = Instance.new("TextButton")
     closeBtn.Size = UDim2.new(0, 30, 0, 30)
     closeBtn.Position = UDim2.new(1, -30, 0, 0)
@@ -57,12 +51,8 @@ function VixBlib:CreateWindow(config)
     closeBtn.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
     closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     closeBtn.Parent = topBar
+    closeBtn.MouseButton1Click:Connect(function() gui:Destroy() end)
 
-    closeBtn.MouseButton1Click:Connect(function()
-        gui:Destroy()
-    end)
-
-    -- Botão Minimizar
     local minBtn = Instance.new("TextButton")
     minBtn.Size = UDim2.new(0, 30, 0, 30)
     minBtn.Position = UDim2.new(1, -60, 0, 0)
@@ -96,11 +86,9 @@ function VixBlib:CreateWindow(config)
     abaList.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
     abaList.BorderSizePixel = 0
     abaList.Parent = mainFrame
+    Instance.new("UIListLayout", abaList).SortOrder = Enum.SortOrder.LayoutOrder
 
-    local layout = Instance.new("UIListLayout", abaList)
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-
-    -- Conteúdo da aba
+    -- Conteúdo
     local contentFrame = Instance.new("Frame")
     contentFrame.Size = UDim2.new(1, -120, 1, -30)
     contentFrame.Position = UDim2.new(0, 120, 0, 30)
@@ -108,7 +96,19 @@ function VixBlib:CreateWindow(config)
     contentFrame.BorderSizePixel = 0
     contentFrame.Parent = mainFrame
 
-    -- Foto do jogador (em baixo à esquerda)
+    -- Label do nome da aba selecionada
+    local abaTitle = Instance.new("TextLabel")
+    abaTitle.Size = UDim2.new(1, -20, 0, 30)
+    abaTitle.Position = UDim2.new(0, 10, 0, 0)
+    abaTitle.Text = ""
+    abaTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    abaTitle.BackgroundTransparency = 1
+    abaTitle.Font = Enum.Font.GothamBold
+    abaTitle.TextSize = 14
+    abaTitle.TextXAlignment = Enum.TextXAlignment.Left
+    abaTitle.Parent = contentFrame
+
+    -- Foto do jogador
     local playerImage = Instance.new("ImageLabel")
     playerImage.Size = UDim2.new(0, 50, 0, 50)
     playerImage.Position = UDim2.new(0, 10, 1, -60)
@@ -116,7 +116,7 @@ function VixBlib:CreateWindow(config)
     playerImage.Image = "https://www.roblox.com/headshot-thumbnail/image?userId="..LocalPlayer.UserId.."&width=100&height=100&format=png"
     playerImage.Parent = abaList
 
-    -- Função de arrastar
+    -- Arrastar
     local UserInputService = game:GetService("UserInputService")
     topBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -124,16 +124,12 @@ function VixBlib:CreateWindow(config)
             dragStart = input.Position
             startPos = mainFrame.Position
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
             end)
         end
     end)
     topBar.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
+        if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
     end)
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
@@ -143,11 +139,9 @@ function VixBlib:CreateWindow(config)
         end
     end)
 
-    -- Criar Abas
     function window:CreateAba(nome)
         local aba = {}
 
-        -- Botão na lateral
         local btn = Instance.new("TextButton")
         btn.Size = UDim2.new(1, 0, 0, 30)
         btn.Text = nome
@@ -157,9 +151,9 @@ function VixBlib:CreateWindow(config)
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn.Parent = abaList
 
-        -- Conteúdo
         local abaFrame = Instance.new("Frame")
-        abaFrame.Size = UDim2.new(1, 0, 1, 0)
+        abaFrame.Size = UDim2.new(1, 0, 1, -30)
+        abaFrame.Position = UDim2.new(0, 0, 0, 30)
         abaFrame.BackgroundTransparency = 1
         abaFrame.Visible = false
         abaFrame.Parent = contentFrame
@@ -169,6 +163,7 @@ function VixBlib:CreateWindow(config)
                 other.Frame.Visible = false
             end
             abaFrame.Visible = true
+            abaTitle.Text = nome
         end)
 
         aba.Frame = abaFrame
