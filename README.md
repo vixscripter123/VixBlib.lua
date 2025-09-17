@@ -1,4 +1,4 @@
---// Biblioteca VixBlib Corrigida
+--// Biblioteca VixBlib - Layout da Segunda Imagem
 local VixBlib = {}
 
 local Players = game:GetService("Players")
@@ -19,9 +19,9 @@ function VixBlib:CreateWindow(config)
     gui.Parent = PlayerGui
 
     local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0, 600, 0, 350)
-    mainFrame.Position = UDim2.new(0.5, -300, 0.5, -175)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    mainFrame.Size = UDim2.new(0, 800, 0, 500)
+    mainFrame.Position = UDim2.new(0.5, -400, 0.5, -250)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     mainFrame.BorderSizePixel = 0
     mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     mainFrame.Parent = gui
@@ -30,9 +30,10 @@ function VixBlib:CreateWindow(config)
     mainCorner.CornerRadius = UDim.new(0, 8)
     mainCorner.Parent = mainFrame
 
+    -- Barra superior
     local topBar = Instance.new("Frame")
-    topBar.Size = UDim2.new(1, 0, 0, 30)
-    topBar.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+    topBar.Size = UDim2.new(1, 0, 0, 40)
+    topBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
     topBar.BorderSizePixel = 0
     topBar.Parent = mainFrame
 
@@ -40,55 +41,68 @@ function VixBlib:CreateWindow(config)
     topCorner.CornerRadius = UDim.new(0, 8)
     topCorner.Parent = topBar
 
+    -- Menu hamburguer
+    local menuBtn = Instance.new("TextButton")
+    menuBtn.Size = UDim2.new(0, 40, 0, 40)
+    menuBtn.Position = UDim2.new(0, 0, 0, 0)
+    menuBtn.Text = "≡"
+    menuBtn.Font = Enum.Font.GothamBold
+    menuBtn.TextSize = 20
+    menuBtn.BackgroundTransparency = 1
+    menuBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    menuBtn.Parent = topBar
+
+    -- Título
     local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, -60, 1, 0)
-    title.Position = UDim2.new(0, 10, 0, 0)
+    title.Size = UDim2.new(1, -120, 1, 0)
+    title.Position = UDim2.new(0, 50, 0, 0)
     title.Text = config.Nome or "VixBlib"
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.BackgroundTransparency = 1
     title.Font = Enum.Font.GothamBold
-    title.TextSize = 14
+    title.TextSize = 16
     title.Parent = topBar
 
+    -- Botões minimizar e fechar
+    local minBtn = Instance.new("TextButton")
+    minBtn.Size = UDim2.new(0, 35, 0, 35)
+    minBtn.Position = UDim2.new(1, -75, 0.5, -17.5)
+    minBtn.Text = "−"
+    minBtn.Font = Enum.Font.GothamBold
+    minBtn.TextSize = 16
+    minBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    minBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minBtn.BorderSizePixel = 0
+    minBtn.Parent = topBar
+
+    local minCorner = Instance.new("UICorner")
+    minCorner.CornerRadius = UDim.new(0, 4)
+    minCorner.Parent = minBtn
+
     local closeBtn = Instance.new("TextButton")
-    closeBtn.Size = UDim2.new(0, 30, 0, 30)
-    closeBtn.Position = UDim2.new(1, -30, 0, 0)
+    closeBtn.Size = UDim2.new(0, 35, 0, 35)
+    closeBtn.Position = UDim2.new(1, -35, 0.5, -17.5)
     closeBtn.Text = "×"
     closeBtn.Font = Enum.Font.GothamBold
     closeBtn.TextSize = 16
-    closeBtn.BackgroundColor3 = Color3.fromRGB(60, 20, 20)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(80, 40, 40)
     closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     closeBtn.BorderSizePixel = 0
     closeBtn.Parent = topBar
 
     local closeCorner = Instance.new("UICorner")
-    closeCorner.CornerRadius = UDim.new(0, 8)
+    closeCorner.CornerRadius = UDim.new(0, 4)
     closeCorner.Parent = closeBtn
 
     closeBtn.MouseButton1Click:Connect(function()
         gui:Destroy()
     end)
 
-    local minBtn = Instance.new("TextButton")
-    minBtn.Size = UDim2.new(0, 30, 0, 30)
-    minBtn.Position = UDim2.new(1, -60, 0, 0)
-    minBtn.Text = "−"
-    minBtn.Font = Enum.Font.GothamBold
-    minBtn.TextSize = 16
-    minBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
-    minBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    minBtn.BorderSizePixel = 0
-    minBtn.Parent = topBar
-
-    local minCorner = Instance.new("UICorner")
-    minCorner.CornerRadius = UDim.new(0, 8)
-    minCorner.Parent = minBtn
-
     local minimized = false
     minBtn.MouseButton1Click:Connect(function()
         minimized = not minimized
-        local targetSize = minimized and UDim2.new(0, 600, 0, 30) or UDim2.new(0, 600, 0, 350)
+        local targetSize = minimized and UDim2.new(0, 800, 0, 40) or UDim2.new(0, 800, 0, 500)
         
         local tween = TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = targetSize})
         tween:Play()
@@ -100,62 +114,81 @@ function VixBlib:CreateWindow(config)
         end
     end)
 
-    -- Frame lateral (abas)
-    local abaList = Instance.new("Frame")
-    abaList.Size = UDim2.new(0, 120, 1, -30)
-    abaList.Position = UDim2.new(0, 0, 0, 30)
-    abaList.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
-    abaList.BorderSizePixel = 0
-    abaList.Parent = mainFrame
+    -- Painel lateral de abas
+    local sidePanel = Instance.new("Frame")
+    sidePanel.Size = UDim2.new(0, 80, 1, -40)
+    sidePanel.Position = UDim2.new(0, 0, 0, 40)
+    sidePanel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    sidePanel.BorderSizePixel = 0
+    sidePanel.Parent = mainFrame
+
+    -- Título "ABAS"
+    local abasTitle = Instance.new("TextLabel")
+    abasTitle.Size = UDim2.new(1, 0, 0, 30)
+    abasTitle.Position = UDim2.new(0, 0, 0, 10)
+    abasTitle.Text = "ABAS"
+    abasTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+    abasTitle.BackgroundTransparency = 1
+    abasTitle.Font = Enum.Font.GothamBold
+    abasTitle.TextSize = 12
+    abasTitle.TextXAlignment = Enum.TextXAlignment.Center
+    abasTitle.Parent = sidePanel
+
+    -- Container para as abas
+    local abaContainer = Instance.new("Frame")
+    abaContainer.Size = UDim2.new(1, 0, 1, -80)
+    abaContainer.Position = UDim2.new(0, 0, 0, 40)
+    abaContainer.BackgroundTransparency = 1
+    abaContainer.Parent = sidePanel
 
     local abaLayout = Instance.new("UIListLayout")
     abaLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    abaLayout.Padding = UDim.new(0, 2)
-    abaLayout.Parent = abaList
+    abaLayout.Padding = UDim.new(0, 5)
+    abaLayout.Parent = abaContainer
 
-    -- Conteúdo
-    local contentFrame = Instance.new("Frame")
-    contentFrame.Size = UDim2.new(1, -120, 1, -30)
-    contentFrame.Position = UDim2.new(0, 120, 0, 30)
-    contentFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
-    contentFrame.BorderSizePixel = 0
-    contentFrame.Parent = mainFrame
-
-    -- Label do nome da aba selecionada
-    local abaTitle = Instance.new("TextLabel")
-    abaTitle.Size = UDim2.new(1, -20, 0, 30)
-    abaTitle.Position = UDim2.new(0, 10, 0, 0)
-    abaTitle.Text = "SELECIONE UMA ABA"
-    abaTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    abaTitle.BackgroundTransparency = 1
-    abaTitle.Font = Enum.Font.GothamBold
-    abaTitle.TextSize = 14
-    abaTitle.TextXAlignment = Enum.TextXAlignment.Left
-    abaTitle.Parent = contentFrame
-
-    -- Foto do jogador
+    -- Foto do jogador na parte inferior
     local playerImage = Instance.new("ImageLabel")
     playerImage.Size = UDim2.new(0, 50, 0, 50)
-    playerImage.Position = UDim2.new(0, 10, 1, -60)
+    playerImage.Position = UDim2.new(0.5, -25, 1, -60)
     playerImage.BackgroundTransparency = 1
     playerImage.Image = "https://www.roblox.com/headshot-thumbnail/image?userId="..LocalPlayer.UserId.."&width=100&height=100&format=png"
-    playerImage.Parent = abaList
+    playerImage.Parent = sidePanel
 
     local imgCorner = Instance.new("UICorner")
     imgCorner.CornerRadius = UDim.new(0, 8)
     imgCorner.Parent = playerImage
 
-    local playerName = Instance.new("TextLabel")
-    playerName.Size = UDim2.new(1, -70, 0, 50)
-    playerName.Position = UDim2.new(0, 65, 1, -60)
-    playerName.Text = LocalPlayer.DisplayName
-    playerName.TextColor3 = Color3.fromRGB(200, 200, 200)
-    playerName.BackgroundTransparency = 1
-    playerName.Font = Enum.Font.Gotham
-    playerName.TextSize = 10
-    playerName.TextXAlignment = Enum.TextXAlignment.Left
-    playerName.TextYAlignment = Enum.TextYAlignment.Center
-    playerName.Parent = abaList
+    local playerLabel = Instance.new("TextLabel")
+    playerLabel.Size = UDim2.new(1, -10, 0, 20)
+    playerLabel.Position = UDim2.new(0, 5, 1, -25)
+    playerLabel.Text = "FOTO DO JOGADOR"
+    playerLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+    playerLabel.BackgroundTransparency = 1
+    playerLabel.Font = Enum.Font.Gotham
+    playerLabel.TextSize = 8
+    playerLabel.TextXAlignment = Enum.TextXAlignment.Center
+    playerLabel.Parent = sidePanel
+
+    -- Área de conteúdo
+    local contentFrame = Instance.new("Frame")
+    contentFrame.Size = UDim2.new(1, -80, 1, -40)
+    contentFrame.Position = UDim2.new(0, 80, 0, 40)
+    contentFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    contentFrame.BorderSizePixel = 0
+    contentFrame.Parent = mainFrame
+
+    -- Título da aba selecionada
+    local abaTitle = Instance.new("TextLabel")
+    abaTitle.Size = UDim2.new(1, -40, 0, 60)
+    abaTitle.Position = UDim2.new(0, 20, 0, 20)
+    abaTitle.Text = "NOME DA ABA SELECIONADA"
+    abaTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    abaTitle.BackgroundTransparency = 1
+    abaTitle.Font = Enum.Font.GothamBold
+    abaTitle.TextSize = 24
+    abaTitle.TextXAlignment = Enum.TextXAlignment.Left
+    abaTitle.TextYAlignment = Enum.TextYAlignment.Center
+    abaTitle.Parent = contentFrame
 
     -- Sistema de arrastar
     topBar.InputBegan:Connect(function(input)
@@ -188,24 +221,27 @@ function VixBlib:CreateWindow(config)
         local aba = {}
         local elementCount = 0
 
+        -- Botão da aba (formato quadrado/vertical)
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, -4, 0, 30)
-        btn.Position = UDim2.new(0, 2, 0, 0)
+        btn.Size = UDim2.new(1, -10, 0, 60)
+        btn.Position = UDim2.new(0, 5, 0, 0)
         btn.Text = nome
         btn.Font = Enum.Font.Gotham
-        btn.TextSize = 12
-        btn.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
+        btn.TextSize = 10
+        btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn.BorderSizePixel = 0
-        btn.Parent = abaList
+        btn.TextWrapped = true
+        btn.Parent = abaContainer
 
         local btnCorner = Instance.new("UICorner")
         btnCorner.CornerRadius = UDim.new(0, 4)
         btnCorner.Parent = btn
 
+        -- Frame de conteúdo da aba
         local abaFrame = Instance.new("ScrollingFrame")
-        abaFrame.Size = UDim2.new(1, 0, 1, -30)
-        abaFrame.Position = UDim2.new(0, 0, 0, 30)
+        abaFrame.Size = UDim2.new(1, -40, 1, -100)
+        abaFrame.Position = UDim2.new(0, 20, 0, 80)
         abaFrame.BackgroundTransparency = 1
         abaFrame.BorderSizePixel = 0
         abaFrame.ScrollBarThickness = 4
@@ -226,21 +262,21 @@ function VixBlib:CreateWindow(config)
         btn.MouseButton1Click:Connect(function()
             -- Resetar cor de todas as abas
             for _, other in pairs(window.Abas) do
-                other.Button.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
+                other.Button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
                 other.Frame.Visible = false
             end
             -- Ativar aba atual
-            btn.BackgroundColor3 = Color3.fromRGB(60, 60, 100)
+            btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
             abaFrame.Visible = true
-            abaTitle.Text = nome
+            abaTitle.Text = nome:upper()
         end)
 
         -- Se é a primeira aba, ativá-la automaticamente
         if primeiraAba then
             primeiraAba = false
-            btn.BackgroundColor3 = Color3.fromRGB(60, 60, 100)
+            btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
             abaFrame.Visible = true
-            abaTitle.Text = nome
+            abaTitle.Text = nome:upper()
         end
 
         aba.Button = btn
@@ -255,7 +291,7 @@ function VixBlib:CreateWindow(config)
             b.Text = txt
             b.Font = Enum.Font.Gotham
             b.TextSize = 13
-            b.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
+            b.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
             b.TextColor3 = Color3.fromRGB(255, 255, 255)
             b.BorderSizePixel = 0
             b.Parent = abaFrame
@@ -266,12 +302,12 @@ function VixBlib:CreateWindow(config)
             bCorner.Parent = b
             
             b.MouseButton1Click:Connect(function()
-                local tween1 = TweenService:Create(b, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(70, 70, 120)})
+                local tween1 = TweenService:Create(b, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(80, 80, 120)})
                 tween1:Play()
                 
                 spawn(function()
                     wait(0.1)
-                    local tween2 = TweenService:Create(b, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(50, 50, 80)})
+                    local tween2 = TweenService:Create(b, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(60, 60, 80)})
                     tween2:Play()
                 end)
                 
@@ -284,7 +320,7 @@ function VixBlib:CreateWindow(config)
             local toggleFrame = Instance.new("Frame")
             toggleFrame.Size = UDim2.new(1, -20, 0, 35)
             toggleFrame.Position = UDim2.new(0, 10, 0, 0)
-            toggleFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+            toggleFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
             toggleFrame.BorderSizePixel = 0
             toggleFrame.Parent = abaFrame
             toggleFrame.LayoutOrder = elementCount
@@ -360,7 +396,7 @@ function VixBlib:CreateWindow(config)
             local sliderFrame = Instance.new("Frame")
             sliderFrame.Size = UDim2.new(1, -20, 0, 50)
             sliderFrame.Position = UDim2.new(0, 10, 0, 0)
-            sliderFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+            sliderFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
             sliderFrame.BorderSizePixel = 0
             sliderFrame.Parent = abaFrame
             sliderFrame.LayoutOrder = elementCount
