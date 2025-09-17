@@ -1,15 +1,14 @@
 --// Biblioteca VixBlib
 local VixBlib = {}
 
--- Serviços
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- Criar Janela Principal
+-- Criar Janela
 function VixBlib:CreateWindow(config)
     local window = {}
-    window.Tabs = {}
+    window.Abas = {}
     local dragging, dragInput, dragStart, startPos
 
     -- ScreenGui
@@ -20,33 +19,27 @@ function VixBlib:CreateWindow(config)
 
     -- Frame principal
     local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0, 500, 0, 300)
-    mainFrame.Position = UDim2.new(0.5, -250, 0.5, -150)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(15, 20, 40)
-    mainFrame.BackgroundTransparency = 0.15 -- 15% transparente
+    mainFrame.Size = UDim2.new(0, 600, 0, 350)
+    mainFrame.Position = UDim2.new(0.5, -300, 0.5, -175)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
     mainFrame.BorderSizePixel = 0
     mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     mainFrame.Parent = gui
 
-    -- UICorner para deixar arredondado
     local corner = Instance.new("UICorner", mainFrame)
-    corner.CornerRadius = UDim.new(0, 12)
+    corner.CornerRadius = UDim.new(0, 8)
 
-    -- Barra Superior (para mover)
+    -- Barra Superior
     local topBar = Instance.new("Frame")
     topBar.Size = UDim2.new(1, 0, 0, 30)
-    topBar.BackgroundColor3 = Color3.fromRGB(10, 15, 25)
+    topBar.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
     topBar.BorderSizePixel = 0
     topBar.Parent = mainFrame
 
-    local topCorner = Instance.new("UICorner", topBar)
-    topCorner.CornerRadius = UDim.new(0, 12)
-
-    -- Título
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(1, -60, 1, 0)
     title.Position = UDim2.new(0, 10, 0, 0)
-    title.Text = config.Nome or "VixBlib Window"
+    title.Text = config.Nome or "VixBlib"
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.BackgroundTransparency = 1
@@ -54,42 +47,82 @@ function VixBlib:CreateWindow(config)
     title.TextSize = 14
     title.Parent = topBar
 
-    -- Botão minimizar/maximizar
-    local toggleBtn = Instance.new("TextButton")
-    toggleBtn.Size = UDim2.new(0, 30, 0, 30)
-    toggleBtn.Position = UDim2.new(1, -35, 0, 0)
-    toggleBtn.Text = "-"
-    toggleBtn.Font = Enum.Font.GothamBold
-    toggleBtn.TextSize = 20
-    toggleBtn.BackgroundColor3 = Color3.fromRGB(20, 25, 40)
-    toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggleBtn.Parent = topBar
+    -- Botão Fechar
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 30, 0, 30)
+    closeBtn.Position = UDim2.new(1, -30, 0, 0)
+    closeBtn.Text = "X"
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.TextSize = 14
+    closeBtn.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeBtn.Parent = topBar
 
-    -- Conteúdo das abas
+    closeBtn.MouseButton1Click:Connect(function()
+        gui:Destroy()
+    end)
+
+    -- Botão Minimizar
+    local minBtn = Instance.new("TextButton")
+    minBtn.Size = UDim2.new(0, 30, 0, 30)
+    minBtn.Position = UDim2.new(1, -60, 0, 0)
+    minBtn.Text = "-"
+    minBtn.Font = Enum.Font.GothamBold
+    minBtn.TextSize = 14
+    minBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
+    minBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minBtn.Parent = topBar
+
+    local minimized = false
+    minBtn.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        if minimized then
+            for _, child in pairs(mainFrame:GetChildren()) do
+                if child ~= topBar then child.Visible = false end
+            end
+            mainFrame.Size = UDim2.new(0, 600, 0, 30)
+        else
+            for _, child in pairs(mainFrame:GetChildren()) do
+                child.Visible = true
+            end
+            mainFrame.Size = UDim2.new(0, 600, 0, 350)
+        end
+    end)
+
+    -- Frame lateral (abas)
+    local abaList = Instance.new("Frame")
+    abaList.Size = UDim2.new(0, 120, 1, -30)
+    abaList.Position = UDim2.new(0, 0, 0, 30)
+    abaList.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+    abaList.BorderSizePixel = 0
+    abaList.Parent = mainFrame
+
+    local layout = Instance.new("UIListLayout", abaList)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    -- Conteúdo da aba
     local contentFrame = Instance.new("Frame")
-    contentFrame.Size = UDim2.new(1, -100, 1, -30)
-    contentFrame.Position = UDim2.new(0, 100, 0, 30)
-    contentFrame.BackgroundTransparency = 1
+    contentFrame.Size = UDim2.new(1, -120, 1, -30)
+    contentFrame.Position = UDim2.new(0, 120, 0, 30)
+    contentFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+    contentFrame.BorderSizePixel = 0
     contentFrame.Parent = mainFrame
 
-    -- Lista de abas (lado esquerdo)
-    local tabList = Instance.new("Frame")
-    tabList.Size = UDim2.new(0, 100, 1, -30)
-    tabList.Position = UDim2.new(0, 0, 0, 30)
-    tabList.BackgroundColor3 = Color3.fromRGB(20, 25, 45)
-    tabList.BorderSizePixel = 0
-    tabList.Parent = mainFrame
+    -- Foto do jogador (em baixo à esquerda)
+    local playerImage = Instance.new("ImageLabel")
+    playerImage.Size = UDim2.new(0, 50, 0, 50)
+    playerImage.Position = UDim2.new(0, 10, 1, -60)
+    playerImage.BackgroundTransparency = 1
+    playerImage.Image = "https://www.roblox.com/headshot-thumbnail/image?userId="..LocalPlayer.UserId.."&width=100&height=100&format=png"
+    playerImage.Parent = abaList
 
-    local tabLayout = Instance.new("UIListLayout", tabList)
-    tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-    -- Função de arrastar a janela
+    -- Função de arrastar
+    local UserInputService = game:GetService("UserInputService")
     topBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             dragStart = input.Position
             startPos = mainFrame.Position
-
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
@@ -97,14 +130,12 @@ function VixBlib:CreateWindow(config)
             end)
         end
     end)
-
     topBar.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement then
             dragInput = input
         end
     end)
-
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
+    UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - dragStart
             mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
@@ -112,76 +143,53 @@ function VixBlib:CreateWindow(config)
         end
     end)
 
-    -- Minimizar/maximizar
-    local minimized = false
-    toggleBtn.MouseButton1Click:Connect(function()
-        minimized = not minimized
-        if minimized then
-            contentFrame.Visible = false
-            tabList.Visible = false
-            mainFrame.Size = UDim2.new(0, 500, 0, 30)
-            toggleBtn.Text = "+"
-        else
-            contentFrame.Visible = true
-            tabList.Visible = true
-            mainFrame.Size = UDim2.new(0, 500, 0, 300)
-            toggleBtn.Text = "-"
-        end
-    end)
+    -- Criar Abas
+    function window:CreateAba(nome)
+        local aba = {}
 
-    -- Criar uma aba
-    function window:CreateTab(nome)
-        local tab = {}
-        local tabBtn = Instance.new("TextButton")
-        tabBtn.Size = UDim2.new(1, 0, 0, 30)
-        tabBtn.Text = nome
-        tabBtn.Font = Enum.Font.GothamBold
-        tabBtn.TextSize = 14
-        tabBtn.BackgroundColor3 = Color3.fromRGB(25, 30, 55)
-        tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        tabBtn.Parent = tabList
+        -- Botão na lateral
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, 0, 0, 30)
+        btn.Text = nome
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 14
+        btn.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Parent = abaList
 
-        local tabFrame = Instance.new("Frame")
-        tabFrame.Size = UDim2.new(1, 0, 1, 0)
-        tabFrame.BackgroundTransparency = 1
-        tabFrame.Visible = false
-        tabFrame.Parent = contentFrame
+        -- Conteúdo
+        local abaFrame = Instance.new("Frame")
+        abaFrame.Size = UDim2.new(1, 0, 1, 0)
+        abaFrame.BackgroundTransparency = 1
+        abaFrame.Visible = false
+        abaFrame.Parent = contentFrame
 
-        -- Ativar aba
-        tabBtn.MouseButton1Click:Connect(function()
-            for _, otherTab in pairs(window.Tabs) do
-                otherTab.Frame.Visible = false
+        btn.MouseButton1Click:Connect(function()
+            for _, other in pairs(window.Abas) do
+                other.Frame.Visible = false
             end
-            tabFrame.Visible = true
+            abaFrame.Visible = true
         end)
 
-        tab.Frame = tabFrame
-        table.insert(window.Tabs, tab)
+        aba.Frame = abaFrame
+        table.insert(window.Abas, aba)
 
-        -- Botões básicos
-        function tab:CreateButton(texto, callback)
-            local btn = Instance.new("TextButton")
-            btn.Size = UDim2.new(0, 200, 0, 40)
-            btn.Position = UDim2.new(0, 10, 0, #tabFrame:GetChildren() * 45)
-            btn.Text = texto
-            btn.Font = Enum.Font.Gotham
-            btn.TextSize = 14
-            btn.BackgroundColor3 = Color3.fromRGB(40, 50, 80)
-            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            btn.Parent = tabFrame
-
-            btn.MouseButton1Click:Connect(function()
+        function aba:CreateButton(txt, callback)
+            local b = Instance.new("TextButton")
+            b.Size = UDim2.new(0, 200, 0, 30)
+            b.Position = UDim2.new(0, 10, 0, #abaFrame:GetChildren() * 35)
+            b.Text = txt
+            b.Font = Enum.Font.Gotham
+            b.TextSize = 14
+            b.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
+            b.TextColor3 = Color3.fromRGB(255, 255, 255)
+            b.Parent = abaFrame
+            b.MouseButton1Click:Connect(function()
                 if callback then callback() end
             end)
         end
 
-        return tab
-    end
-
-    -- Ativar a primeira aba automaticamente
-    game:GetService("RunService").Heartbeat:Wait()
-    if window.Tabs[1] then
-        window.Tabs[1].Frame.Visible = true
+        return aba
     end
 
     return window
