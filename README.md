@@ -165,7 +165,7 @@ function VixBlib:CreateWindow(config)
     local minimized = false
     minBtn.MouseButton1Click:Connect(function()
         minimized = not minimized
-        local targetSize = minimized and UDim2.new(0, 850, 0, 45) or UDim2.new(0, 850, 0, 520)
+        local targetSize = minimized and UDim2.new(0, 300, 0, 45) or UDim2.new(0, 850, 0, 520)
         
         if minimized then
             -- Esconder TODOS os elementos exceto topBar
