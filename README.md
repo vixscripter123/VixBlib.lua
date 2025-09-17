@@ -217,6 +217,7 @@ function VixBlib:CreateWindow(config)
     sidePanel.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
     sidePanel.BackgroundTransparency = 0.15
     sidePanel.BorderSizePixel = 0
+    sidePanel.ClipsDescendants = true  -- Importante: impede vazamento
     sidePanel.Parent = mainFrame
 
     local sideGradient = Instance.new("UIGradient")
@@ -311,6 +312,7 @@ function VixBlib:CreateWindow(config)
     contentFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
     contentFrame.BackgroundTransparency = 0.2
     contentFrame.BorderSizePixel = 0
+    contentFrame.ClipsDescendants = true  -- Importante: impede vazamento
     contentFrame.Parent = mainFrame
 
     local contentGradient = Instance.new("UIGradient")
