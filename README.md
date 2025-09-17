@@ -166,13 +166,20 @@ function VixBlib:CreateWindow(config)
         minimized = not minimized
         local targetSize = minimized and UDim2.new(0, 850, 0, 45) or UDim2.new(0, 850, 0, 520)
         
-        local tween = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = targetSize})
-        tween:Play()
-        
-        for _, child in pairs(mainFrame:GetChildren()) do
-            if child ~= topBar and child ~= shadow then 
-                child.Visible = not minimized 
-            end
+        if minimized then
+            -- Esconder elementos primeiro, depois reduzir tamanho
+            sidePanel.Visible = false
+            contentFrame.Visible = false
+            local tween = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = targetSize})
+            tween:Play()
+        else
+            -- Aumentar tamanho primeiro, depois mostrar elementos
+            local tween = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = targetSize})
+            tween:Play()
+            tween.Completed:Connect(function()
+                sidePanel.Visible = true
+                contentFrame.Visible = true
+            end)
         end
     end)
 
