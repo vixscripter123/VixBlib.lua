@@ -1,4 +1,4 @@
---// Biblioteca VixBlib - Layout Melhorado com Transparência
+--// Biblioteca VixBlib Completa - Com Sistema de Keys Integrado
 local VixBlib = {}
 
 local Players = game:GetService("Players")
@@ -6,22 +6,419 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
 
+-- Banco de dados de keys válidas
+local VALID_KEYS = {}
+
+--// SISTEMA DE KEYS
+function VixBlib:CreateKeySystem(config)
+    local keySystem = {}
+    
+    -- Configurações
+    local hubName = config.HubName or "VixHub"
+    local apiUrl = config.ApiUrl or nil -- URL da sua API (opcional)
+    local onSuccess = config.OnSuccess or function() end
+    local getKeyUrl = config.GetKeyUrl or "https://seu-site-keys.com"
+    
+    -- Criar ScreenGui
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "VixKeySystem"
+    gui.ResetOnSpawn = false
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.Parent = PlayerGui
+    
+    -- Overlay
+    local overlay = Instance.new("Frame")
+    overlay.Size = UDim2.new(1, 0, 1, 0)
+    overlay.BackgroundColor3 = Color3.fromRGB(10, 20, 40)
+    overlay.BackgroundTransparency = 0.2
+    overlay.BorderSizePixel = 0
+    overlay.Parent = gui
+    
+    -- Frame principal
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(0, 480, 0, 400)
+    mainFrame.Position = UDim2.new(0.5, -240, 0.5, -200)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 35, 50)
+    mainFrame.BackgroundTransparency = 0.05
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Parent = overlay
+    
+    local mainCorner = Instance.new("UICorner")
+    mainCorner.CornerRadius = UDim.new(0, 15)
+    mainCorner.Parent = mainFrame
+    
+    -- Sombra
+    local shadow = Instance.new("Frame")
+    shadow.Size = UDim2.new(1, 30, 1, 30)
+    shadow.Position = UDim2.new(0, -15, 0, -15)
+    shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.BackgroundTransparency = 0.6
+    shadow.BorderSizePixel = 0
+    shadow.ZIndex = mainFrame.ZIndex - 1
+    shadow.Parent = mainFrame
+    
+    local shadowCorner = Instance.new("UICorner")
+    shadowCorner.CornerRadius = UDim.new(0, 20)
+    shadowCorner.Parent = shadow
+    
+    -- Header
+    local header = Instance.new("Frame")
+    header.Size = UDim2.new(1, 0, 0, 80)
+    header.BackgroundColor3 = Color3.fromRGB(25, 30, 45)
+    header.BackgroundTransparency = 0.3
+    header.BorderSizePixel = 0
+    header.Parent = mainFrame
+    
+    local headerCorner = Instance.new("UICorner")
+    headerCorner.CornerRadius = UDim.new(0, 15)
+    headerCorner.Parent = header
+    
+    -- Título
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -80, 0, 35)
+    title.Position = UDim2.new(0, 20, 0, 10)
+    title.Text = hubName
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.BackgroundTransparency = 1
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 24
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Parent = header
+    
+    local titleStroke = Instance.new("UIStroke")
+    titleStroke.Color = Color3.fromRGB(100, 200, 255)
+    titleStroke.Transparency = 0.7
+    titleStroke.Thickness = 2
+    titleStroke.Parent = title
+    
+    -- Subtítulo
+    local subtitle = Instance.new("TextLabel")
+    subtitle.Size = UDim2.new(1, -80, 0, 25)
+    subtitle.Position = UDim2.new(0, 20, 0, 48)
+    subtitle.Text = "KEY DO SISTEMA"
+    subtitle.TextColor3 = Color3.fromRGB(180, 180, 180)
+    subtitle.BackgroundTransparency = 1
+    subtitle.Font = Enum.Font.Gotham
+    subtitle.TextSize = 13
+    subtitle.TextXAlignment = Enum.TextXAlignment.Left
+    subtitle.Parent = header
+    
+    -- Botão fechar
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 40, 0, 40)
+    closeBtn.Position = UDim2.new(1, -50, 0, 10)
+    closeBtn.Text = "×"
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.TextSize = 24
+    closeBtn.BackgroundColor3 = Color3.fromRGB(120, 60, 60)
+    closeBtn.BackgroundTransparency = 0.3
+    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeBtn.BorderSizePixel = 0
+    closeBtn.Parent = header
+    
+    local closeBtnCorner = Instance.new("UICorner")
+    closeBtnCorner.CornerRadius = UDim.new(0, 10)
+    closeBtnCorner.Parent = closeBtn
+    
+    -- Página 1: Tela inicial
+    local page1 = Instance.new("Frame")
+    page1.Size = UDim2.new(1, -40, 1, -180)
+    page1.Position = UDim2.new(0, 20, 0, 100)
+    page1.BackgroundTransparency = 1
+    page1.Parent = mainFrame
+    
+    local infoFrame = Instance.new("Frame")
+    infoFrame.Size = UDim2.new(1, 0, 0, 140)
+    infoFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+    infoFrame.BackgroundTransparency = 0.3
+    infoFrame.BorderSizePixel = 0
+    infoFrame.Parent = page1
+    
+    local infoCorner = Instance.new("UICorner")
+    infoCorner.CornerRadius = UDim.new(0, 12)
+    infoCorner.Parent = infoFrame
+    
+    local infoStroke = Instance.new("UIStroke")
+    infoStroke.Color = Color3.fromRGB(100, 200, 255)
+    infoStroke.Transparency = 0.7
+    infoStroke.Thickness = 2
+    infoStroke.Parent = infoFrame
+    
+    local infoText = Instance.new("TextLabel")
+    infoText.Size = UDim2.new(1, -30, 0, 50)
+    infoText.Position = UDim2.new(0, 15, 0, 15)
+    infoText.Text = "A sua key ta quase pronta só tenha paciência e clike no botão em baixo"
+    infoText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    infoText.BackgroundTransparency = 1
+    infoText.Font = Enum.Font.Gotham
+    infoText.TextSize = 13
+    infoText.TextWrapped = true
+    infoText.Parent = infoFrame
+    
+    local generateArea = Instance.new("Frame")
+    generateArea.Size = UDim2.new(1, -30, 0, 60)
+    generateArea.Position = UDim2.new(0, 15, 0, 70)
+    generateArea.BackgroundTransparency = 1
+    generateArea.Parent = infoFrame
+    
+    local folderIcon = Instance.new("TextLabel")
+    folderIcon.Size = UDim2.new(0, 50, 0, 50)
+    folderIcon.Position = UDim2.new(0, 10, 0, 5)
+    folderIcon.Text = "📁"
+    folderIcon.TextSize = 32
+    folderIcon.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
+    folderIcon.BackgroundTransparency = 0.3
+    folderIcon.BorderSizePixel = 0
+    folderIcon.Parent = generateArea
+    
+    local iconCorner = Instance.new("UICorner")
+    iconCorner.CornerRadius = UDim.new(0, 8)
+    iconCorner.Parent = folderIcon
+    
+    local generatingText = Instance.new("TextLabel")
+    generatingText.Size = UDim2.new(1, -150, 1, 0)
+    generatingText.Position = UDim2.new(0, 70, 0, 0)
+    generatingText.Text = "Gerando a sua key só clike no botão"
+    generatingText.TextColor3 = Color3.fromRGB(100, 200, 255)
+    generatingText.BackgroundTransparency = 1
+    generatingText.Font = Enum.Font.GothamBold
+    generatingText.TextSize = 15
+    generatingText.TextXAlignment = Enum.TextXAlignment.Left
+    generatingText.Parent = generateArea
+    
+    local createBtn = Instance.new("TextButton")
+    createBtn.Size = UDim2.new(1, 0, 0, 50)
+    createBtn.Position = UDim2.new(0, 0, 0, 160)
+    createBtn.Text = "Criar a sua key"
+    createBtn.Font = Enum.Font.GothamBold
+    createBtn.TextSize = 16
+    createBtn.BackgroundColor3 = Color3.fromRGB(60, 100, 180)
+    createBtn.BackgroundTransparency = 0.2
+    createBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    createBtn.BorderSizePixel = 0
+    createBtn.Parent = page1
+    
+    local createCorner = Instance.new("UICorner")
+    createCorner.CornerRadius = UDim.new(0, 10)
+    createCorner.Parent = createBtn
+    
+    -- Página 2: Validação de key
+    local page2 = Instance.new("Frame")
+    page2.Size = UDim2.new(1, -40, 1, -180)
+    page2.Position = UDim2.new(0, 20, 0, 100)
+    page2.BackgroundTransparency = 1
+    page2.Visible = false
+    page2.Parent = mainFrame
+    
+    local keyInputFrame = Instance.new("Frame")
+    keyInputFrame.Size = UDim2.new(1, 0, 0, 60)
+    keyInputFrame.BackgroundColor3 = Color3.fromRGB(20, 25, 40)
+    keyInputFrame.BackgroundTransparency = 0.3
+    keyInputFrame.BorderSizePixel = 0
+    keyInputFrame.Parent = page2
+    
+    local inputCorner = Instance.new("UICorner")
+    inputCorner.CornerRadius = UDim.new(0, 10)
+    inputCorner.Parent = keyInputFrame
+    
+    local inputStroke = Instance.new("UIStroke")
+    inputStroke.Color = Color3.fromRGB(100, 200, 255)
+    inputStroke.Transparency = 0.7
+    inputStroke.Thickness = 2
+    inputStroke.Parent = keyInputFrame
+    
+    local keyInput = Instance.new("TextBox")
+    keyInput.Size = UDim2.new(1, -30, 1, -20)
+    keyInput.Position = UDim2.new(0, 15, 0, 10)
+    keyInput.PlaceholderText = "VIXB-XXXX-XXXX-XXXX"
+    keyInput.Text = ""
+    keyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+    keyInput.PlaceholderColor3 = Color3.fromRGB(120, 120, 140)
+    keyInput.BackgroundTransparency = 1
+    keyInput.Font = Enum.Font.GothamBold
+    keyInput.TextSize = 18
+    keyInput.Parent = keyInputFrame
+    
+    local btnContainer = Instance.new("Frame")
+    btnContainer.Size = UDim2.new(1, 0, 0, 50)
+    btnContainer.Position = UDim2.new(0, 0, 0, 80)
+    btnContainer.BackgroundTransparency = 1
+    btnContainer.Parent = page2
+    
+    local validateBtn = Instance.new("TextButton")
+    validateBtn.Size = UDim2.new(0.48, 0, 1, 0)
+    validateBtn.Text = "ok aceita a key"
+    validateBtn.Font = Enum.Font.GothamBold
+    validateBtn.TextSize = 14
+    validateBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+    validateBtn.BackgroundTransparency = 0.2
+    validateBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    validateBtn.BorderSizePixel = 0
+    validateBtn.Parent = btnContainer
+    
+    local validateCorner = Instance.new("UICorner")
+    validateCorner.CornerRadius = UDim.new(0, 10)
+    validateCorner.Parent = validateBtn
+    
+    local getKeyBtn = Instance.new("TextButton")
+    getKeyBtn.Size = UDim2.new(0.48, 0, 1, 0)
+    getKeyBtn.Position = UDim2.new(0.52, 0, 0, 0)
+    getKeyBtn.Text = "Pegar a key"
+    getKeyBtn.Font = Enum.Font.GothamBold
+    getKeyBtn.TextSize = 14
+    getKeyBtn.BackgroundColor3 = Color3.fromRGB(60, 100, 180)
+    getKeyBtn.BackgroundTransparency = 0.2
+    getKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    getKeyBtn.BorderSizePixel = 0
+    getKeyBtn.Parent = btnContainer
+    
+    local getKeyCorner = Instance.new("UICorner")
+    getKeyCorner.CornerRadius = UDim.new(0, 10)
+    getKeyCorner.Parent = getKeyBtn
+    
+    local statusMsg = Instance.new("TextLabel")
+    statusMsg.Size = UDim2.new(1, 0, 0, 80)
+    statusMsg.Position = UDim2.new(0, 0, 0, 150)
+    statusMsg.Text = ""
+    statusMsg.TextColor3 = Color3.fromRGB(255, 255, 255)
+    statusMsg.BackgroundTransparency = 1
+    statusMsg.Font = Enum.Font.Gotham
+    statusMsg.TextSize = 13
+    statusMsg.TextWrapped = true
+    statusMsg.Visible = false
+    statusMsg.Parent = page2
+    
+    local footer = Instance.new("TextLabel")
+    footer.Size = UDim2.new(1, 0, 0, 40)
+    footer.Position = UDim2.new(0, 0, 1, -45)
+    footer.Text = "Criado pro Vix Scripter"
+    footer.TextColor3 = Color3.fromRGB(150, 150, 150)
+    footer.BackgroundTransparency = 1
+    footer.Font = Enum.Font.Gotham
+    footer.TextSize = 12
+    footer.Parent = mainFrame
+    
+    -- Função de validação
+    local function validateKey(key)
+        key = key:gsub("%s+", "")
+        
+        if not key:match("^VIXB%-%w%w%w%w%-%w%w%w%w%-%w%w%w%w$") then
+            return false, "Formato de key inválido!"
+        end
+        
+        -- Se tiver API configurada
+        if apiUrl then
+            local success, response = pcall(function()
+                return HttpService:RequestAsync({
+                    Url = apiUrl .. "/api/keys/validate",
+                    Method = "POST",
+                    Headers = {["Content-Type"] = "application/json"},
+                    Body = HttpService:JSONEncode({
+                        key = key,
+                        userId = tostring(LocalPlayer.UserId),
+                        userName = LocalPlayer.Name
+                    })
+                })
+            end)
+            
+            if success and response.StatusCode == 200 then
+                local data = HttpService:JSONDecode(response.Body)
+                return data.success, data.message
+            else
+                return false, "Erro ao conectar com servidor"
+            end
+        end
+        
+        -- Validação local
+        local keyData = VALID_KEYS[key]
+        if keyData then
+            if keyData.used then
+                return false, "Key já foi utilizada!"
+            end
+            if keyData.expiryDate and os.time() > keyData.expiryDate then
+                return false, "Key expirada!"
+            end
+            keyData.used = true
+            return true, "Key válida! Bem-vindo " .. (keyData.userName or LocalPlayer.Name)
+        end
+        
+        return false, "Key não encontrada ou inválida!"
+    end
+    
+    -- Eventos
+    createBtn.MouseButton1Click:Connect(function()
+        page1.Visible = false
+        page2.Visible = true
+        subtitle.Text = "INSIRA SUA KEY"
+    end)
+    
+    validateBtn.MouseButton1Click:Connect(function()
+        local inputKey = keyInput.Text
+        
+        if inputKey == "" then
+            statusMsg.Text = "❌ Por favor, insira uma key!"
+            statusMsg.TextColor3 = Color3.fromRGB(255, 100, 100)
+            statusMsg.Visible = true
+            return
+        end
+        
+        local isValid, message = validateKey(inputKey)
+        
+        if isValid then
+            statusMsg.Text = "✅ " .. message
+            statusMsg.TextColor3 = Color3.fromRGB(100, 255, 100)
+            statusMsg.Visible = true
+            
+            wait(1.5)
+            gui:Destroy()
+            onSuccess()
+        else
+            statusMsg.Text = "❌ " .. message
+            statusMsg.TextColor3 = Color3.fromRGB(255, 100, 100)
+            statusMsg.Visible = true
+        end
+    end)
+    
+    getKeyBtn.MouseButton1Click:Connect(function()
+        setclipboard(getKeyUrl)
+        statusMsg.Text = "🔗 Link copiado! Cole no navegador para pegar sua key."
+        statusMsg.TextColor3 = Color3.fromRGB(100, 200, 255)
+        statusMsg.Visible = true
+    end)
+    
+    closeBtn.MouseButton1Click:Connect(function()
+        gui:Destroy()
+    end)
+    
+    return keySystem
+end
+
+-- Adicionar key manualmente
+function VixBlib:AddKey(key, data)
+    VALID_KEYS[key] = {
+        userName = data.UserName,
+        hubName = data.HubName,
+        createdAt = os.time(),
+        expiryDate = data.ExpiryDate,
+        used = false
+    }
+end
+
+--// SISTEMA DE BOLINHA TOGGLE
 function VixBlib:CreateBolinha(config)
     local bolinha = {}
     
-    -- Configurações
     local cor = config.Cor or Color3.fromRGB(100, 200, 255)
     local tamanho = config.Tamanho or 60
     local posicao = config.Posicao or {X = 100, Y = 100}
     
-    -- Criar ScreenGui
     local gui = Instance.new("ScreenGui")
     gui.Name = "VixBolinhaToggle"
     gui.ResetOnSpawn = false
     gui.Parent = PlayerGui
     
-    -- Frame principal da bolinha
     local frame = Instance.new("TextButton")
     frame.Size = UDim2.new(0, tamanho, 0, tamanho)
     frame.Position = UDim2.new(0, posicao.X, 0, posicao.Y)
@@ -33,17 +430,13 @@ function VixBlib:CreateBolinha(config)
     frame.Font = Enum.Font.GothamBold
     frame.Parent = gui
     
-    -- Fazer redonda
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0.5, 0)
     corner.Parent = frame
     
-    -- Variáveis para arrastar
     local dragging = false
-    local dragStart = nil
-    local startPos = nil
+    local dragStart, startPos
     
-    -- Sistema de arrastar
     frame.MouseButton1Down:Connect(function()
         dragging = true
         local mouse = Players.LocalPlayer:GetMouse()
@@ -65,27 +458,22 @@ function VixBlib:CreateBolinha(config)
         end
     end)
     
-    -- Variável para janela conectada
-    local windowConnected = nil
+    local windowConnected
     
-    -- Conectar com janela
     function bolinha:ConectarJanela(window)
         windowConnected = window
     end
     
-    -- Click para abrir/fechar
     frame.MouseButton1Click:Connect(function()
         if windowConnected and windowConnected.mainFrame then
             windowConnected.mainFrame.Visible = not windowConnected.mainFrame.Visible
         end
     end)
     
-    -- Mudar cor
     function bolinha:MudarCor(novaCor)
         frame.BackgroundColor3 = novaCor
     end
     
-    -- Destruir
     function bolinha:Destroy()
         gui:Destroy()
     end
@@ -93,6 +481,7 @@ function VixBlib:CreateBolinha(config)
     return bolinha
 end
 
+--// SISTEMA DE JANELA
 function VixBlib:CreateWindow(config)
     local window = {}
     window.Abas = {}
@@ -111,14 +500,13 @@ function VixBlib:CreateWindow(config)
     mainFrame.BackgroundTransparency = 0.1
     mainFrame.BorderSizePixel = 0
     mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    mainFrame.ClipsDescendants = true  -- IMPORTANTE: Corta qualquer coisa que saia dos limites
+    mainFrame.ClipsDescendants = true
     mainFrame.Parent = gui
 
     local mainCorner = Instance.new("UICorner")
     mainCorner.CornerRadius = UDim.new(0, 12)
     mainCorner.Parent = mainFrame
 
-    -- Efeito de blur/sombra
     local shadow = Instance.new("Frame")
     shadow.Size = UDim2.new(1, 20, 1, 20)
     shadow.Position = UDim2.new(0, -10, 0, -10)
@@ -132,7 +520,6 @@ function VixBlib:CreateWindow(config)
     shadowCorner.CornerRadius = UDim.new(0, 15)
     shadowCorner.Parent = shadow
 
-    -- Barra superior com gradiente
     local topBar = Instance.new("Frame")
     topBar.Size = UDim2.new(1, 0, 0, 45)
     topBar.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
@@ -152,7 +539,6 @@ function VixBlib:CreateWindow(config)
     topGradient.Rotation = 90
     topGradient.Parent = topBar
 
-    -- Menu hamburguer com efeito hover
     local menuBtn = Instance.new("TextButton")
     menuBtn.Size = UDim2.new(0, 45, 0, 45)
     menuBtn.Position = UDim2.new(0, 0, 0, 0)
@@ -171,7 +557,6 @@ function VixBlib:CreateWindow(config)
         TweenService:Create(menuBtn, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
     end)
 
-    -- Título com efeito
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(1, -130, 1, 0)
     title.Position = UDim2.new(0, 55, 0, 0)
@@ -189,7 +574,6 @@ function VixBlib:CreateWindow(config)
     titleStroke.Thickness = 1
     titleStroke.Parent = title
 
-    -- Botões com efeitos hover melhorados
     local minBtn = Instance.new("TextButton")
     minBtn.Size = UDim2.new(0, 38, 0, 38)
     minBtn.Position = UDim2.new(1, -80, 0.5, -19)
@@ -222,7 +606,6 @@ function VixBlib:CreateWindow(config)
     closeCorner.CornerRadius = UDim.new(0, 8)
     closeCorner.Parent = closeBtn
 
-    -- Efeitos hover nos botões
     minBtn.MouseEnter:Connect(function()
         TweenService:Create(minBtn, TweenInfo.new(0.2), {BackgroundTransparency = 0.1}):Play()
     end)
@@ -253,38 +636,20 @@ function VixBlib:CreateWindow(config)
         minimized = not minimized
         
         if minimized then
-            -- Ao minimizar: esconder TUDO exceto topBar
             mainFrame.Size = UDim2.new(0, 300, 0, 45)
-            sidePanel.Visible = false
-            contentFrame.Visible = false
-            
-            -- Força esconder todos os elementos filhos do mainFrame
             for _, child in pairs(mainFrame:GetChildren()) do
-                if child.Name ~= "Frame" or child == topBar then -- Manter apenas topBar
-                    -- Skip topBar
-                elseif child:IsA("GuiObject") then
+                if child ~= topBar and child:IsA("GuiObject") then
                     child.Visible = false
                 end
             end
-            
         else
-            -- Ao maximizar: primeiro redimensionar, depois mostrar
             mainFrame.Size = UDim2.new(0, 850, 0, 520)
-            
-            -- Pequeno delay para garantir que o redimensionamento aconteceu
             wait(0.1)
-            
-            sidePanel.Visible = true
-            contentFrame.Visible = true
-            
-            -- Restaurar visibilidade dos elementos
             for _, child in pairs(mainFrame:GetChildren()) do
                 if child ~= topBar and child:IsA("GuiObject") then
                     child.Visible = true
                 end
             end
-            
-            -- Restaurar aba ativa
             for _, aba in pairs(window.Abas) do
                 if aba.Button.BackgroundColor3 == Color3.fromRGB(70, 70, 100) then
                     aba.Frame.Visible = true
@@ -295,14 +660,13 @@ function VixBlib:CreateWindow(config)
         end
     end)
 
-    -- Painel lateral com transparência e gradiente
     local sidePanel = Instance.new("Frame")
     sidePanel.Size = UDim2.new(0, 90, 1, -45)
     sidePanel.Position = UDim2.new(0, 0, 0, 45)
     sidePanel.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
     sidePanel.BackgroundTransparency = 0.15
     sidePanel.BorderSizePixel = 0
-    sidePanel.ClipsDescendants = true  -- Importante: impede vazamento
+    sidePanel.ClipsDescendants = true
     sidePanel.Parent = mainFrame
 
     local sideGradient = Instance.new("UIGradient")
@@ -313,7 +677,6 @@ function VixBlib:CreateWindow(config)
     sideGradient.Rotation = 180
     sideGradient.Parent = sidePanel
 
-    -- Linha divisória sutil
     local divider = Instance.new("Frame")
     divider.Size = UDim2.new(0, 1, 1, 0)
     divider.Position = UDim2.new(1, 0, 0, 0)
@@ -322,7 +685,6 @@ function VixBlib:CreateWindow(config)
     divider.BorderSizePixel = 0
     divider.Parent = sidePanel
 
-    -- Título "ABAS" com efeito glow
     local abasTitle = Instance.new("TextLabel")
     abasTitle.Size = UDim2.new(1, 0, 0, 35)
     abasTitle.Position = UDim2.new(0, 0, 0, 15)
@@ -340,7 +702,6 @@ function VixBlib:CreateWindow(config)
     abasStroke.Thickness = 1
     abasStroke.Parent = abasTitle
 
-    -- Container para as abas com scroll
     local abaContainer = Instance.new("ScrollingFrame")
     abaContainer.Size = UDim2.new(1, 0, 1, -120)
     abaContainer.Position = UDim2.new(0, 0, 0, 50)
@@ -361,7 +722,6 @@ function VixBlib:CreateWindow(config)
         abaContainer.CanvasSize = UDim2.new(0, 0, 0, abaLayout.AbsoluteContentSize.Y + 20)
     end)
 
-    -- Foto do jogador com efeito
     local playerImage = Instance.new("ImageLabel")
     playerImage.Size = UDim2.new(0, 55, 0, 55)
     playerImage.Position = UDim2.new(0.5, -27.5, 1, -70)
@@ -379,25 +739,13 @@ function VixBlib:CreateWindow(config)
     imgStroke.Thickness = 2
     imgStroke.Parent = playerImage
 
-    local playerLabel = Instance.new("TextLabel")
-    playerLabel.Size = UDim2.new(1, -10, 0, 15)
-    playerLabel.Position = UDim2.new(0, 5, 1, -20)
-    playerLabel.Text = "FOTO DO JOGADOR"
-    playerLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-    playerLabel.BackgroundTransparency = 1
-    playerLabel.Font = Enum.Font.Gotham
-    playerLabel.TextSize = 9
-    playerLabel.TextXAlignment = Enum.TextXAlignment.Center
-    playerLabel.Parent = sidePanel
-
-    -- Área de conteúdo com transparência
     local contentFrame = Instance.new("Frame")
     contentFrame.Size = UDim2.new(1, -90, 1, -45)
     contentFrame.Position = UDim2.new(0, 90, 0, 45)
     contentFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
     contentFrame.BackgroundTransparency = 0.2
     contentFrame.BorderSizePixel = 0
-    contentFrame.ClipsDescendants = true  -- Importante: impede vazamento
+    contentFrame.ClipsDescendants = true
     contentFrame.Parent = mainFrame
 
     local contentGradient = Instance.new("UIGradient")
@@ -408,7 +756,6 @@ function VixBlib:CreateWindow(config)
     contentGradient.Rotation = 45
     contentGradient.Parent = contentFrame
 
-    -- Título da aba selecionada com efeito
     local abaTitle = Instance.new("TextLabel")
     abaTitle.Size = UDim2.new(1, -50, 0, 70)
     abaTitle.Position = UDim2.new(0, 25, 0, 25)
@@ -427,7 +774,6 @@ function VixBlib:CreateWindow(config)
     titleMainStroke.Thickness = 1
     titleMainStroke.Parent = abaTitle
 
-    -- Sistema de arrastar
     topBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
@@ -458,7 +804,6 @@ function VixBlib:CreateWindow(config)
         local aba = {}
         local elementCount = 0
 
-        -- Botão da aba com efeitos melhorados
         local btn = Instance.new("TextButton")
         btn.Size = UDim2.new(1, -10, 0, 65)
         btn.Position = UDim2.new(0, 5, 0, 0)
@@ -490,7 +835,6 @@ function VixBlib:CreateWindow(config)
         btnGradient.Rotation = 90
         btnGradient.Parent = btn
 
-        -- Efeitos hover no botão da aba
         btn.MouseEnter:Connect(function()
             TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.1}):Play()
             TweenService:Create(btnStroke, TweenInfo.new(0.2), {Transparency = 0.4}):Play()
@@ -503,7 +847,6 @@ function VixBlib:CreateWindow(config)
             end
         end)
 
-        -- Frame de conteúdo da aba
         local abaFrame = Instance.new("ScrollingFrame")
         abaFrame.Size = UDim2.new(1, -50, 1, -110)
         abaFrame.Position = UDim2.new(0, 25, 0, 85)
@@ -526,7 +869,6 @@ function VixBlib:CreateWindow(config)
         end)
 
         btn.MouseButton1Click:Connect(function()
-            -- Resetar cor de todas as abas
             for _, other in pairs(window.Abas) do
                 TweenService:Create(other.Button, TweenInfo.new(0.3), {
                     BackgroundColor3 = Color3.fromRGB(40, 40, 60),
@@ -535,7 +877,6 @@ function VixBlib:CreateWindow(config)
                 TweenService:Create(other.Button:FindFirstChild("UIStroke"), TweenInfo.new(0.3), {Transparency = 0.8}):Play()
                 other.Frame.Visible = false
             end
-            -- Ativar aba atual
             TweenService:Create(btn, TweenInfo.new(0.3), {
                 BackgroundColor3 = Color3.fromRGB(70, 70, 100),
                 BackgroundTransparency = 0.1
@@ -543,13 +884,11 @@ function VixBlib:CreateWindow(config)
             TweenService:Create(btnStroke, TweenInfo.new(0.3), {Transparency = 0.3}):Play()
             abaFrame.Visible = true
             
-            -- Efeito de fade no título
             abaTitle.TextTransparency = 1
             abaTitle.Text = nome:upper()
             TweenService:Create(abaTitle, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
         end)
 
-        -- Se é a primeira aba, ativá-la automaticamente
         if primeiraAba then
             primeiraAba = false
             btn.BackgroundColor3 = Color3.fromRGB(70, 70, 100)
@@ -588,40 +927,18 @@ function VixBlib:CreateWindow(config)
             bStroke.Thickness = 1
             bStroke.Parent = b
 
-            local bGradient = Instance.new("UIGradient")
-            bGradient.Color = ColorSequence.new{
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(70, 70, 100)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 50, 80))
-            }
-            bGradient.Rotation = 90
-            bGradient.Parent = b
-
             b.MouseEnter:Connect(function()
                 TweenService:Create(b, TweenInfo.new(0.2), {BackgroundTransparency = 0.1}):Play()
-                TweenService:Create(bStroke, TweenInfo.new(0.2), {Transparency = 0.4}):Play()
             end)
 
             b.MouseLeave:Connect(function()
                 TweenService:Create(b, TweenInfo.new(0.2), {BackgroundTransparency = 0.2}):Play()
-                TweenService:Create(bStroke, TweenInfo.new(0.2), {Transparency = 0.7}):Play()
             end)
             
             b.MouseButton1Click:Connect(function()
-                local tween1 = TweenService:Create(b, TweenInfo.new(0.1), {
-                    BackgroundTransparency = 0.05,
-                    Size = UDim2.new(1, -18, 0, 38)
-                })
-                tween1:Play()
-                
-                spawn(function()
-                    wait(0.1)
-                    local tween2 = TweenService:Create(b, TweenInfo.new(0.2), {
-                        BackgroundTransparency = 0.2,
-                        Size = UDim2.new(1, -20, 0, 40)
-                    })
-                    tween2:Play()
-                end)
-                
+                TweenService:Create(b, TweenInfo.new(0.1), {Size = UDim2.new(1, -18, 0, 38)}):Play()
+                wait(0.1)
+                TweenService:Create(b, TweenInfo.new(0.2), {Size = UDim2.new(1, -20, 0, 40)}):Play()
                 if callback then callback() end
             end)
         end
@@ -630,7 +947,6 @@ function VixBlib:CreateWindow(config)
             elementCount = elementCount + 1
             local toggleFrame = Instance.new("Frame")
             toggleFrame.Size = UDim2.new(1, -20, 0, 40)
-            toggleFrame.Position = UDim2.new(0, 10, 0, 0)
             toggleFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
             toggleFrame.BackgroundTransparency = 0.3
             toggleFrame.BorderSizePixel = 0
@@ -640,12 +956,6 @@ function VixBlib:CreateWindow(config)
             local toggleCorner = Instance.new("UICorner")
             toggleCorner.CornerRadius = UDim.new(0, 8)
             toggleCorner.Parent = toggleFrame
-
-            local toggleStroke = Instance.new("UIStroke")
-            toggleStroke.Color = Color3.fromRGB(100, 200, 255)
-            toggleStroke.Transparency = 0.8
-            toggleStroke.Thickness = 1
-            toggleStroke.Parent = toggleFrame
 
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(1, -70, 1, 0)
@@ -663,19 +973,12 @@ function VixBlib:CreateWindow(config)
             toggle.Position = UDim2.new(1, -55, 0.5, -11)
             toggle.Text = ""
             toggle.BackgroundColor3 = default and Color3.fromRGB(50, 180, 50) or Color3.fromRGB(80, 80, 80)
-            toggle.BackgroundTransparency = 0.2
             toggle.BorderSizePixel = 0
             toggle.Parent = toggleFrame
 
-            local toggleBtnCorner = Instance.new("UICorner")
-            toggleBtnCorner.CornerRadius = UDim.new(0, 11)
-            toggleBtnCorner.Parent = toggle
-
-            local toggleBtnStroke = Instance.new("UIStroke")
-            toggleBtnStroke.Color = Color3.fromRGB(255, 255, 255)
-            toggleBtnStroke.Transparency = 0.6
-            toggleBtnStroke.Thickness = 1
-            toggleBtnStroke.Parent = toggle
+            local toggleCorner2 = Instance.new("UICorner")
+            toggleCorner2.CornerRadius = UDim.new(0, 11)
+            toggleCorner2.Parent = toggle
 
             local circle = Instance.new("Frame")
             circle.Size = UDim2.new(0, 18, 0, 18)
@@ -688,12 +991,6 @@ function VixBlib:CreateWindow(config)
             circleCorner.CornerRadius = UDim.new(0, 9)
             circleCorner.Parent = circle
 
-            local circleStroke = Instance.new("UIStroke")
-            circleStroke.Color = Color3.fromRGB(200, 200, 200)
-            circleStroke.Transparency = 0.5
-            circleStroke.Thickness = 1
-            circleStroke.Parent = circle
-
             local toggled = default or false
 
             toggle.MouseButton1Click:Connect(function()
@@ -701,10 +998,8 @@ function VixBlib:CreateWindow(config)
                 local newPos = toggled and UDim2.new(0, 25, 0, 2) or UDim2.new(0, 2, 0, 2)
                 local newColor = toggled and Color3.fromRGB(50, 180, 50) or Color3.fromRGB(80, 80, 80)
                 
-                local tween1 = TweenService:Create(circle, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Position = newPos})
-                local tween2 = TweenService:Create(toggle, TweenInfo.new(0.3), {BackgroundColor3 = newColor})
-                tween1:Play()
-                tween2:Play()
+                TweenService:Create(circle, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Position = newPos}):Play()
+                TweenService:Create(toggle, TweenInfo.new(0.3), {BackgroundColor3 = newColor}):Play()
                 
                 if callback then callback(toggled) end
             end)
@@ -712,12 +1007,8 @@ function VixBlib:CreateWindow(config)
             return {
                 SetValue = function(self, value)
                     toggled = value
-                    local newPos = toggled and UDim2.new(0, 25, 0, 2) or UDim2.new(0, 2, 0, 2)
-                    local newColor = toggled and Color3.fromRGB(50, 180, 50) or Color3.fromRGB(80, 80, 80)
-                    local tween1 = TweenService:Create(circle, TweenInfo.new(0.3), {Position = newPos})
-                    local tween2 = TweenService:Create(toggle, TweenInfo.new(0.3), {BackgroundColor3 = newColor})
-                    tween1:Play()
-                    tween2:Play()
+                    circle.Position = toggled and UDim2.new(0, 25, 0, 2) or UDim2.new(0, 2, 0, 2)
+                    toggle.BackgroundColor3 = toggled and Color3.fromRGB(50, 180, 50) or Color3.fromRGB(80, 80, 80)
                 end
             }
         end
@@ -726,7 +1017,6 @@ function VixBlib:CreateWindow(config)
             elementCount = elementCount + 1
             local sliderFrame = Instance.new("Frame")
             sliderFrame.Size = UDim2.new(1, -20, 0, 55)
-            sliderFrame.Position = UDim2.new(0, 10, 0, 0)
             sliderFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
             sliderFrame.BackgroundTransparency = 0.3
             sliderFrame.BorderSizePixel = 0
@@ -736,12 +1026,6 @@ function VixBlib:CreateWindow(config)
             local sliderCorner = Instance.new("UICorner")
             sliderCorner.CornerRadius = UDim.new(0, 8)
             sliderCorner.Parent = sliderFrame
-
-            local sliderStroke = Instance.new("UIStroke")
-            sliderStroke.Color = Color3.fromRGB(100, 200, 255)
-            sliderStroke.Transparency = 0.8
-            sliderStroke.Thickness = 1
-            sliderStroke.Parent = sliderFrame
 
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(1, -120, 0, 28)
@@ -769,7 +1053,6 @@ function VixBlib:CreateWindow(config)
             sliderBar.Size = UDim2.new(1, -30, 0, 6)
             sliderBar.Position = UDim2.new(0, 15, 1, -20)
             sliderBar.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-            sliderBar.BackgroundTransparency = 0.3
             sliderBar.BorderSizePixel = 0
             sliderBar.Parent = sliderFrame
 
@@ -777,17 +1060,9 @@ function VixBlib:CreateWindow(config)
             barCorner.CornerRadius = UDim.new(0, 3)
             barCorner.Parent = sliderBar
 
-            local barStroke = Instance.new("UIStroke")
-            barStroke.Color = Color3.fromRGB(100, 200, 255)
-            barStroke.Transparency = 0.6
-            barStroke.Thickness = 1
-            barStroke.Parent = sliderBar
-
             local fillBar = Instance.new("Frame")
             fillBar.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-            fillBar.Position = UDim2.new(0, 0, 0, 0)
             fillBar.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
-            fillBar.BackgroundTransparency = 0.2
             fillBar.BorderSizePixel = 0
             fillBar.Parent = sliderBar
 
@@ -795,52 +1070,20 @@ function VixBlib:CreateWindow(config)
             fillCorner.CornerRadius = UDim.new(0, 3)
             fillCorner.Parent = fillBar
 
-            local fillGradient = Instance.new("UIGradient")
-            fillGradient.Color = ColorSequence.new{
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 220, 255)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 180, 255))
-            }
-            fillGradient.Parent = fillBar
-
             local slider = Instance.new("TextButton")
             slider.Size = UDim2.new(0, 20, 0, 20)
             slider.Position = UDim2.new((default - min) / (max - min), -10, 0, -7)
             slider.Text = ""
             slider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            slider.BackgroundTransparency = 0.1
             slider.BorderSizePixel = 0
             slider.Parent = sliderBar
 
-            local sliderBtnCorner = Instance.new("UICorner")
-            sliderBtnCorner.CornerRadius = UDim.new(0, 10)
-            sliderBtnCorner.Parent = slider
-
-            local sliderBtnStroke = Instance.new("UIStroke")
-            sliderBtnStroke.Color = Color3.fromRGB(100, 200, 255)
-            sliderBtnStroke.Transparency = 0.4
-            sliderBtnStroke.Thickness = 2
-            sliderBtnStroke.Parent = slider
+            local sliderCorner2 = Instance.new("UICorner")
+            sliderCorner2.CornerRadius = UDim.new(0, 10)
+            sliderCorner2.Parent = slider
 
             local currentValue = default
             local dragging = false
-
-            slider.MouseEnter:Connect(function()
-                TweenService:Create(slider, TweenInfo.new(0.2), {
-                    Size = UDim2.new(0, 24, 0, 24),
-                    Position = UDim2.new((currentValue - min) / (max - min), -12, 0, -9)
-                }):Play()
-                TweenService:Create(sliderBtnStroke, TweenInfo.new(0.2), {Transparency = 0.2}):Play()
-            end)
-
-            slider.MouseLeave:Connect(function()
-                if not dragging then
-                    TweenService:Create(slider, TweenInfo.new(0.2), {
-                        Size = UDim2.new(0, 20, 0, 20),
-                        Position = UDim2.new((currentValue - min) / (max - min), -10, 0, -7)
-                    }):Play()
-                    TweenService:Create(sliderBtnStroke, TweenInfo.new(0.2), {Transparency = 0.4}):Play()
-                end
-            end)
 
             slider.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -855,11 +1098,8 @@ function VixBlib:CreateWindow(config)
                     currentValue = math.floor(min + (max - min) * relativePos)
                     
                     valueLabel.Text = tostring(currentValue)
-                    
-                    local fillTween = TweenService:Create(fillBar, TweenInfo.new(0.1), {Size = UDim2.new(relativePos, 0, 1, 0)})
-                    local sliderTween = TweenService:Create(slider, TweenInfo.new(0.1), {Position = UDim2.new(relativePos, -12, 0, -9)})
-                    fillTween:Play()
-                    sliderTween:Play()
+                    fillBar.Size = UDim2.new(relativePos, 0, 1, 0)
+                    slider.Position = UDim2.new(relativePos, -10, 0, -7)
                     
                     if callback then callback(currentValue) end
                 end
@@ -868,11 +1108,6 @@ function VixBlib:CreateWindow(config)
             UserInputService.InputEnded:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
                     dragging = false
-                    TweenService:Create(slider, TweenInfo.new(0.2), {
-                        Size = UDim2.new(0, 20, 0, 20),
-                        Position = UDim2.new((currentValue - min) / (max - min), -10, 0, -7)
-                    }):Play()
-                    TweenService:Create(sliderBtnStroke, TweenInfo.new(0.2), {Transparency = 0.4}):Play()
                 end
             end)
 
@@ -890,9 +1125,7 @@ function VixBlib:CreateWindow(config)
         return aba
     end
 
-    -- Adicionar referência ao mainFrame para a bolinha
     window.mainFrame = mainFrame
-
     return window
 end
 
