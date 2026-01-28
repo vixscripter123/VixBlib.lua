@@ -6,272 +6,200 @@
 88. ~8~ 88b  d88   .88.        j88.         88booo. 88b  d88 88   88    @uniquadev
  Y888P  ~Y8888P' Y888888P      888888D      Y88888P ~Y8888P' YP   YP  SCRIPT HUB
 
-designed using localmaze gui creator
+Biblioteca estilo Rayfield - v2.0
 ]=]
 
 local ScriptHub = {}
 ScriptHub.__index = ScriptHub
 
--- Configurações
-ScriptHub.Settings = {
-    DebugMode = false,
-    DefaultScripts = {
-        ["Admin Scripts"] = {
-            {Name = "Infinite Yield FE", Function = function()
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
-            end},
-            {Name = "CMD-X", Function = function()
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/CMD-X/CMD-X/master/Source", true))()
-            end},
-            {Name = "Reviz Admin", Function = function()
-                loadstring(game:HttpGet("https://pastebin.com/raw/YAq50gzA"))()
-            end}
-        },
-        ["Player Scripts"] = {
-            {Name = "Fly Script", Function = function()
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
-            end},
-            {Name = "Speed Script", Function = function()
-                local player = game.Players.LocalPlayer
-                player.Character.Humanoid.WalkSpeed = 50
-            end},
-            {Name = "Jump Script", Function = function()
-                local player = game.Players.LocalPlayer
-                player.Character.Humanoid.JumpPower = 100
-            end}
-        },
-        ["Fun Scripts"] = {
-            {Name = "Chat Logger", Function = function()
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/DaCoderMane/roblox-scripts/main/chatlogger.lua"))()
-            end},
-            {Name = "Esp Script", Function = function()
-                loadstring(game:HttpGet("https://pastebin.com/raw/Qu6vK8hY"))()
-            end},
-            {Name = "TP Tool", Function = function()
-                loadstring(game:HttpGet("https://pastebin.com/raw/djBfk8mA"))()
-            end}
-        }
-    }
-}
+-- Serviços
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
 
--- Cores do tema
-ScriptHub.Colors = {
+-- Configurações de cores
+local Theme = {
     Primary = Color3.fromRGB(24, 42, 93),
     Secondary = Color3.fromRGB(0, 0, 0),
     Accent = Color3.fromRGB(80, 124, 157),
     Text = Color3.fromRGB(255, 255, 255),
     Success = Color3.fromRGB(76, 175, 80),
     Error = Color3.fromRGB(244, 67, 54),
+    Warning = Color3.fromRGB(255, 193, 7),
+    Info = Color3.fromRGB(33, 150, 243),
     ScrollBar = Color3.fromRGB(191, 241, 255)
 }
 
--- Inicializar GUI
-function ScriptHub:CreateGUI()
-    if self.Gui then self.Gui:Destroy() end
+-- Biblioteca Principal
+local Library = {}
+
+function Library:CreateWindow(config)
+    local Window = {
+        Tabs = {},
+        CurrentTab = nil,
+        Minimized = false
+    }
     
-    local Players = game:GetService("Players")
-    local player = Players.LocalPlayer
-    local PlayerGui = player:WaitForChild("PlayerGui")
+    config = config or {}
+    config.Name = config.Name or "Script Hub"
+    config.LoadingTitle = config.LoadingTitle or "Script Hub"
+    config.LoadingSubtitle = config.LoadingSubtitle or "by @uniquadev"
+    config.ConfigurationSaving = config.ConfigurationSaving or {Enabled = false}
+    config.Discord = config.Discord or {Enabled = false}
+    config.KeySystem = config.KeySystem or false
     
-    -- ScreenGui Principal
-    self.Gui = Instance.new("ScreenGui")
-    self.Gui.Name = "ScriptHub"
-    self.Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    self.Gui.Parent = PlayerGui
+    -- Criar ScreenGui
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "ScriptHub_" .. math.random(1000, 9999)
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.ResetOnSpawn = false
     
-    -- Background
-    self.Background = Instance.new("Frame")
-    self.Background.Name = "Background"
-    self.Background.BorderSizePixel = 0
-    self.Background.BackgroundColor3 = ScriptHub.Colors.Secondary
-    self.Background.Size = UDim2.new(0.47604, 0, 0.561, 0)
-    self.Background.Position = UDim2.new(0, 506, 0, 188)
-    self.Background.Parent = self.Gui
+    -- Proteção contra exclusão
+    if syn and syn.protect_gui then
+        syn.protect_gui(ScreenGui)
+        ScreenGui.Parent = CoreGui
+    elseif gethui then
+        ScreenGui.Parent = gethui()
+    else
+        ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+    end
+    
+    Window.ScreenGui = ScreenGui
+    
+    -- Background principal
+    local Background = Instance.new("Frame")
+    Background.Name = "Background"
+    Background.BorderSizePixel = 0
+    Background.BackgroundColor3 = Theme.Secondary
+    Background.Size = UDim2.new(0, 550, 0, 400)
+    Background.Position = UDim2.new(0.5, -275, 0.5, -200)
+    Background.Parent = ScreenGui
     
     local bgCorner = Instance.new("UICorner")
     bgCorner.CornerRadius = UDim.new(0, 16)
-    bgCorner.Parent = self.Background
+    bgCorner.Parent = Background
+    
+    local bgStroke = Instance.new("UIStroke")
+    bgStroke.Color = Theme.Primary
+    bgStroke.Thickness = 2
+    bgStroke.Parent = Background
+    
+    Window.Background = Background
     
     -- Header
-    self.Header = Instance.new("Frame")
-    self.Header.Name = "Header"
-    self.Header.BorderSizePixel = 0
-    self.Header.BackgroundColor3 = ScriptHub.Colors.Primary
-    self.Header.Size = UDim2.new(0.47083, 0, 0.07508, 0)
-    self.Header.Position = UDim2.new(0, 512, 0, 194)
-    self.Header.Parent = self.Gui
+    local Header = Instance.new("Frame")
+    Header.Name = "Header"
+    Header.BorderSizePixel = 0
+    Header.BackgroundColor3 = Theme.Primary
+    Header.Size = UDim2.new(1, 0, 0, 40)
+    Header.Parent = Background
     
     local headerCorner = Instance.new("UICorner")
-    headerCorner.CornerRadius = UDim.new(0, 12)
-    headerCorner.Parent = self.Header
+    headerCorner.CornerRadius = UDim.new(0, 16)
+    headerCorner.Parent = Header
     
     -- Título
-    local title = Instance.new("TextLabel")
-    title.Name = "Title"
-    title.Text = "SCRIPT HUB v1.0"
-    title.Font = Enum.Font.GothamBold
-    title.TextColor3 = ScriptHub.Colors.Text
-    title.TextSize = 18
-    title.BackgroundTransparency = 1
-    title.Size = UDim2.new(1, 0, 1, 0)
-    title.Parent = self.Header
+    local Title = Instance.new("TextLabel")
+    Title.Name = "Title"
+    Title.Text = config.Name
+    Title.Font = Enum.Font.GothamBold
+    Title.TextColor3 = Theme.Text
+    Title.TextSize = 16
+    Title.BackgroundTransparency = 1
+    Title.Size = UDim2.new(1, -100, 1, 0)
+    Title.Position = UDim2.new(0, 15, 0, 0)
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Parent = Header
     
-    -- Sidebar (Categorias)
-    self.Sidebar = Instance.new("Frame")
-    self.Sidebar.Name = "Sidebar"
-    self.Sidebar.BorderSizePixel = 0
-    self.Sidebar.BackgroundColor3 = ScriptHub.Colors.Primary
-    self.Sidebar.Size = UDim2.new(0.12812, 0, 0.45881, 0)
-    self.Sidebar.Position = UDim2.new(0, 514, 0, 274)
-    self.Sidebar.Parent = self.Gui
-    
-    local sidebarCorner = Instance.new("UICorner")
-    sidebarCorner.CornerRadius = UDim.new(0, 12)
-    sidebarCorner.Parent = self.Sidebar
-    
-    local sidebarLayout = Instance.new("UIListLayout")
-    sidebarLayout.Padding = UDim.new(0, 5)
-    sidebarLayout.Parent = self.Sidebar
-    
-    -- Área de Scripts
-    self.ScriptsFrame = Instance.new("ScrollingFrame")
-    self.ScriptsFrame.Name = "ScriptsFrame"
-    self.ScriptsFrame.BorderSizePixel = 0
-    self.ScriptsFrame.BackgroundColor3 = ScriptHub.Colors.Primary
-    self.ScriptsFrame.Size = UDim2.new(0.33437, 0, 0.45881, 0)
-    self.ScriptsFrame.Position = UDim2.new(0, 770, 0, 276)
-    self.ScriptsFrame.ScrollBarImageColor3 = ScriptHub.Colors.ScrollBar
-    self.ScriptsFrame.ScrollBarThickness = 8
-    self.ScriptsFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-    self.ScriptsFrame.Parent = self.Gui
-    
-    local scriptsCorner = Instance.new("UICorner")
-    scriptsCorner.CornerRadius = UDim.new(0, 12)
-    scriptsCorner.Parent = self.ScriptsFrame
-    
-    local scriptsLayout = Instance.new("UIListLayout")
-    scriptsLayout.Padding = UDim.new(0, 8)
-    scriptsLayout.Parent = self.ScriptsFrame
-    
-    -- Botão de Fechar
-    self.CloseButton = Instance.new("TextButton")
-    self.CloseButton.Name = "CloseButton"
-    self.CloseButton.Text = "X"
-    self.CloseButton.Font = Enum.Font.GothamBold
-    self.CloseButton.TextColor3 = ScriptHub.Colors.Text
-    self.CloseButton.TextSize = 14
-    self.CloseButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-    self.CloseButton.Size = UDim2.new(0, 25, 0, 25)
-    self.CloseButton.Position = UDim2.new(1, -30, 0, 5)
-    self.CloseButton.Parent = self.Header
+    -- Botões de controle
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Name = "Close"
+    CloseButton.Text = "✕"
+    CloseButton.Font = Enum.Font.GothamBold
+    CloseButton.TextColor3 = Theme.Text
+    CloseButton.TextSize = 14
+    CloseButton.BackgroundColor3 = Theme.Error
+    CloseButton.Size = UDim2.new(0, 30, 0, 30)
+    CloseButton.Position = UDim2.new(1, -35, 0.5, -15)
+    CloseButton.Parent = Header
     
     local closeCorner = Instance.new("UICorner")
-    closeCorner.CornerRadius = UDim.new(0, 6)
-    closeCorner.Parent = self.CloseButton
+    closeCorner.CornerRadius = UDim.new(0, 8)
+    closeCorner.Parent = CloseButton
     
-    -- Botão de Minimizar
-    self.MinimizeButton = Instance.new("TextButton")
-    self.MinimizeButton.Name = "MinimizeButton"
-    self.MinimizeButton.Text = "_"
-    self.MinimizeButton.Font = Enum.Font.GothamBold
-    self.MinimizeButton.TextColor3 = ScriptHub.Colors.Text
-    self.MinimizeButton.TextSize = 14
-    self.MinimizeButton.BackgroundColor3 = Color3.fromRGB(255, 193, 7)
-    self.MinimizeButton.Size = UDim2.new(0, 25, 0, 25)
-    self.MinimizeButton.Position = UDim2.new(1, -60, 0, 5)
-    self.MinimizeButton.Parent = self.Header
+    local MinimizeButton = Instance.new("TextButton")
+    MinimizeButton.Name = "Minimize"
+    MinimizeButton.Text = "−"
+    MinimizeButton.Font = Enum.Font.GothamBold
+    MinimizeButton.TextColor3 = Theme.Text
+    MinimizeButton.TextSize = 14
+    MinimizeButton.BackgroundColor3 = Theme.Warning
+    MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
+    MinimizeButton.Position = UDim2.new(1, -70, 0.5, -15)
+    MinimizeButton.Parent = Header
     
     local minCorner = Instance.new("UICorner")
-    minCorner.CornerRadius = UDim.new(0, 6)
-    minCorner.Parent = self.MinimizeButton
+    minCorner.CornerRadius = UDim.new(0, 8)
+    minCorner.Parent = MinimizeButton
     
-    -- Botão de Executar Tudo
-    self.ExecuteAllButton = Instance.new("TextButton")
-    self.ExecuteAllButton.Name = "ExecuteAllButton"
-    self.ExecuteAllButton.Text = "▶ Executar Todos"
-    self.ExecuteAllButton.Font = Enum.Font.GothamBold
-    self.ExecuteAllButton.TextColor3 = ScriptHub.Colors.Text
-    self.ExecuteAllButton.TextSize = 12
-    self.ExecuteAllButton.BackgroundColor3 = ScriptHub.Colors.Success
-    self.ExecuteAllButton.Size = UDim2.new(0.9, 0, 0, 30)
-    self.ExecuteAllButton.Position = UDim2.new(0.05, 0, 0.9, 0)
-    self.ExecuteAllButton.Parent = self.Background
+    -- Container de Tabs
+    local TabContainer = Instance.new("Frame")
+    TabContainer.Name = "TabContainer"
+    TabContainer.BackgroundColor3 = Theme.Primary
+    TabContainer.BorderSizePixel = 0
+    TabContainer.Size = UDim2.new(0, 140, 1, -50)
+    TabContainer.Position = UDim2.new(0, 5, 0, 45)
+    TabContainer.Parent = Background
     
-    local execCorner = Instance.new("UICorner")
-    execCorner.CornerRadius = UDim.new(0, 8)
-    execCorner.Parent = self.ExecuteAllButton
+    local tabCorner = Instance.new("UICorner")
+    tabCorner.CornerRadius = UDim.new(0, 12)
+    tabCorner.Parent = TabContainer
     
-    self:SetupEvents()
-    self:LoadCategories()
-    self:SelectCategory("Admin Scripts")
+    local TabLayout = Instance.new("UIListLayout")
+    TabLayout.Padding = UDim.new(0, 5)
+    TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    TabLayout.Parent = TabContainer
     
-    return self.Gui
-end
-
--- Configurar eventos
-function ScriptHub:SetupEvents()
-    self.CloseButton.MouseButton1Click:Connect(function()
-        self.Gui:Destroy()
-        self.Gui = nil
-    end)
+    local TabPadding = Instance.new("UIPadding")
+    TabPadding.PaddingTop = UDim.new(0, 5)
+    TabPadding.PaddingLeft = UDim.new(0, 5)
+    TabPadding.PaddingRight = UDim.new(0, 5)
+    TabPadding.Parent = TabContainer
     
-    self.MinimizeButton.MouseButton1Click:Connect(function()
-        local isVisible = self.Background.Visible
-        self.Background.Visible = not isVisible
-        self.Sidebar.Visible = not isVisible
-        self.ScriptsFrame.Visible = not isVisible
-        self.ExecuteAllButton.Visible = not isVisible
-    end)
+    Window.TabContainer = TabContainer
     
-    self.ExecuteAllButton.MouseButton1Click:Connect(function()
-        self:ExecuteAllScripts()
-    end)
+    -- Container de conteúdo
+    local ContentContainer = Instance.new("Frame")
+    ContentContainer.Name = "ContentContainer"
+    ContentContainer.BackgroundTransparency = 1
+    ContentContainer.Size = UDim2.new(1, -155, 1, -50)
+    ContentContainer.Position = UDim2.new(0, 150, 0, 45)
+    ContentContainer.Parent = Background
+    
+    Window.ContentContainer = ContentContainer
     
     -- Sistema de arrastar
-    local dragging
+    local dragging = false
     local dragInput
     local dragStart
     local startPos
     
     local function update(input)
         local delta = input.Position - dragStart
-        self.Header.Position = UDim2.new(
+        Background.Position = UDim2.new(
             startPos.X.Scale,
             startPos.X.Offset + delta.X,
             startPos.Y.Scale,
             startPos.Y.Offset + delta.Y
         )
-        self.Background.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y - 6
-        )
-        self.Sidebar.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X - 2,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y + 80
-        )
-        self.ScriptsFrame.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X + 264,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y + 82
-        )
-        self.ExecuteAllButton.Position = UDim2.new(
-            0.05,
-            startPos.X.Offset + delta.X,
-            0.9,
-            startPos.Y.Offset + delta.Y + 266
-        )
     end
     
-    self.Header.InputBegan:Connect(function(input)
+    Header.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             dragStart = input.Position
-            startPos = self.Header.Position
+            startPos = Background.Position
             
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
@@ -281,251 +209,496 @@ function ScriptHub:SetupEvents()
         end
     end)
     
-    self.Header.InputChanged:Connect(function(input)
+    Header.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement then
             dragInput = input
         end
     end)
     
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
+    UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             update(input)
         end
     end)
-end
-
--- Carregar categorias
-function ScriptHub:LoadCategories()
-    for categoryName in pairs(ScriptHub.Settings.DefaultScripts) do
-        local categoryButton = Instance.new("TextButton")
-        categoryButton.Name = categoryName
-        categoryButton.Text = categoryName
-        categoryButton.Font = Enum.Font.Gotham
-        categoryButton.TextColor3 = ScriptHub.Colors.Text
-        categoryButton.TextSize = 12
-        categoryButton.BackgroundColor3 = ScriptHub.Colors.Accent
-        categoryButton.Size = UDim2.new(0.9, 0, 0, 35)
-        categoryButton.Position = UDim2.new(0.05, 0, 0, 5)
-        categoryButton.Parent = self.Sidebar
+    
+    -- Eventos dos botões
+    CloseButton.MouseButton1Click:Connect(function()
+        ScreenGui:Destroy()
+    end)
+    
+    MinimizeButton.MouseButton1Click:Connect(function()
+        Window.Minimized = not Window.Minimized
+        local targetSize = Window.Minimized and UDim2.new(0, 550, 0, 40) or UDim2.new(0, 550, 0, 400)
         
-        local btnCorner = Instance.new("UICorner")
-        btnCorner.CornerRadius = UDim.new(0, 6)
-        btnCorner.Parent = categoryButton
+        TweenService:Create(Background, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = targetSize
+        }):Play()
         
-        categoryButton.MouseButton1Click:Connect(function()
-            self:SelectCategory(categoryName)
+        TabContainer.Visible = not Window.Minimized
+        ContentContainer.Visible = not Window.Minimized
+    end)
+    
+    -- Função para criar Tab
+    function Window:CreateTab(config)
+        config = config or {}
+        config.Name = config.Name or "Tab"
+        config.Icon = config.Icon or "rbxassetid://4483345998"
+        
+        local Tab = {
+            Elements = {},
+            Button = nil,
+            Content = nil,
+            Active = false
+        }
+        
+        -- Botão da Tab
+        local TabButton = Instance.new("TextButton")
+        TabButton.Name = config.Name
+        TabButton.Text = "  " .. config.Name
+        TabButton.Font = Enum.Font.Gotham
+        TabButton.TextColor3 = Theme.Text
+        TabButton.TextSize = 13
+        TabButton.TextXAlignment = Enum.TextXAlignment.Left
+        TabButton.BackgroundColor3 = Theme.Accent
+        TabButton.Size = UDim2.new(1, 0, 0, 35)
+        TabButton.Parent = TabContainer
+        
+        local tabBtnCorner = Instance.new("UICorner")
+        tabBtnCorner.CornerRadius = UDim.new(0, 8)
+        tabBtnCorner.Parent = TabButton
+        
+        Tab.Button = TabButton
+        
+        -- Conteúdo da Tab
+        local TabContent = Instance.new("ScrollingFrame")
+        TabContent.Name = config.Name .. "_Content"
+        TabContent.BackgroundTransparency = 1
+        TabContent.BorderSizePixel = 0
+        TabContent.Size = UDim2.new(1, 0, 1, 0)
+        TabContent.ScrollBarThickness = 4
+        TabContent.ScrollBarImageColor3 = Theme.ScrollBar
+        TabContent.CanvasSize = UDim2.new(0, 0, 0, 0)
+        TabContent.Visible = false
+        TabContent.Parent = ContentContainer
+        
+        local ContentLayout = Instance.new("UIListLayout")
+        ContentLayout.Padding = UDim.new(0, 8)
+        ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        ContentLayout.Parent = TabContent
+        
+        local ContentPadding = Instance.new("UIPadding")
+        ContentPadding.PaddingTop = UDim.new(0, 5)
+        ContentPadding.PaddingLeft = UDim.new(0, 5)
+        ContentPadding.PaddingRight = UDim.new(0, 5)
+        ContentPadding.Parent = TabContent
+        
+        Tab.Content = TabContent
+        
+        -- Atualizar tamanho do canvas
+        ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 10)
         end)
-    end
-end
-
--- Selecionar categoria
-function ScriptHub:SelectCategory(categoryName)
-    -- Limpar scripts atuais
-    for _, child in ipairs(self.ScriptsFrame:GetChildren()) do
-        if child:IsA("Frame") then
-            child:Destroy()
-        end
-    end
-    
-    -- Carregar scripts da categoria
-    local scripts = ScriptHub.Settings.DefaultScripts[categoryName]
-    if not scripts then return end
-    
-    local totalHeight = 0
-    
-    for i, scriptData in ipairs(scripts) do
-        local scriptFrame = Instance.new("Frame")
-        scriptFrame.Name = "Script_" .. i
-        scriptFrame.BackgroundColor3 = ScriptHub.Colors.Accent
-        scriptFrame.Size = UDim2.new(0.95, 0, 0, 80)
-        scriptFrame.Position = UDim2.new(0.025, 0, 0, (i-1)*88)
-        scriptFrame.Parent = self.ScriptsFrame
         
-        local scriptCorner = Instance.new("UICorner")
-        scriptCorner.CornerRadius = UDim.new(0, 8)
-        scriptCorner.Parent = scriptFrame
-        
-        -- Nome do script
-        local nameLabel = Instance.new("TextLabel")
-        nameLabel.Name = "Name"
-        nameLabel.Text = scriptData.Name
-        nameLabel.Font = Enum.Font.GothamBold
-        nameLabel.TextColor3 = ScriptHub.Colors.Text
-        nameLabel.TextSize = 14
-        nameLabel.BackgroundTransparency = 1
-        nameLabel.Size = UDim2.new(0.7, 0, 0.4, 0)
-        nameLabel.Position = UDim2.new(0.05, 0, 0.1, 0)
-        nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-        nameLabel.Parent = scriptFrame
-        
-        -- Botão de execução
-        local executeButton = Instance.new("TextButton")
-        executeButton.Name = "ExecuteButton"
-        executeButton.Text = "Executar"
-        executeButton.Font = Enum.Font.GothamBold
-        executeButton.TextColor3 = ScriptHub.Colors.Text
-        executeButton.TextSize = 12
-        executeButton.BackgroundColor3 = ScriptHub.Colors.Success
-        executeButton.Size = UDim2.new(0.25, 0, 0.4, 0)
-        executeButton.Position = UDim2.new(0.7, 0, 0.1, 0)
-        executeButton.Parent = scriptFrame
-        
-        local execBtnCorner = Instance.new("UICorner")
-        execBtnCorner.CornerRadius = UDim.new(0, 6)
-        execBtnCorner.Parent = executeButton
-        
-        executeButton.MouseButton1Click:Connect(function()
-            local success, err = pcall(function()
-                scriptData.Function()
-            end)
-            
-            if not success then
-                self:ShowNotification("Erro ao executar script: " .. err, "error")
-            else
-                self:ShowNotification("Script executado com sucesso!", "success")
+        -- Evento de clique
+        TabButton.MouseButton1Click:Connect(function()
+            for _, tab in pairs(Window.Tabs) do
+                tab.Content.Visible = false
+                tab.Button.BackgroundColor3 = Theme.Accent
+                tab.Active = false
             end
+            
+            TabContent.Visible = true
+            TabButton.BackgroundColor3 = Theme.Primary
+            Tab.Active = true
+            Window.CurrentTab = Tab
         end)
         
-        -- Botão de copiar
-        local copyButton = Instance.new("TextButton")
-        copyButton.Name = "CopyButton"
-        copyButton.Text = "Copiar"
-        copyButton.Font = Enum.Font.GothamBold
-        copyButton.TextColor3 = ScriptHub.Colors.Text
-        copyButton.TextSize = 12
-        copyButton.BackgroundColor3 = Color3.fromRGB(33, 150, 243)
-        copyButton.Size = UDim2.new(0.25, 0, 0.4, 0)
-        copyButton.Position = UDim2.new(0.7, 0, 0.55, 0)
-        copyButton.Parent = scriptFrame
+        -- Adicionar à lista
+        table.insert(Window.Tabs, Tab)
         
-        local copyBtnCorner = Instance.new("UICorner")
-        copyBtnCorner.CornerRadius = UDim.new(0, 6)
-        copyBtnCorner.Parent = copyButton
+        -- Ativar primeira tab
+        if #Window.Tabs == 1 then
+            TabButton.BackgroundColor3 = Theme.Primary
+            TabContent.Visible = true
+            Tab.Active = true
+            Window.CurrentTab = Tab
+        end
         
-        copyButton.MouseButton1Click:Connect(function()
-            self:ShowNotification("Função copiada para área de transferência", "info")
-        end)
-        
-        totalHeight = totalHeight + 88
-    end
-    
-    self.ScriptsFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
-end
-
--- Executar todos scripts da categoria
-function ScriptHub:ExecuteAllScripts()
-    local scripts = ScriptHub.Settings.DefaultScripts
-    local executed = 0
-    local failed = 0
-    
-    for categoryName, categoryScripts in pairs(scripts) do
-        for _, scriptData in ipairs(categoryScripts) do
-            local success, err = pcall(function()
-                scriptData.Function()
+        -- Função para criar Button
+        function Tab:CreateButton(config)
+            config = config or {}
+            config.Name = config.Name or "Button"
+            config.Callback = config.Callback or function() end
+            
+            local ButtonFrame = Instance.new("Frame")
+            ButtonFrame.BackgroundColor3 = Theme.Primary
+            ButtonFrame.Size = UDim2.new(1, -10, 0, 40)
+            ButtonFrame.Parent = TabContent
+            
+            local btnCorner = Instance.new("UICorner")
+            btnCorner.CornerRadius = UDim.new(0, 10)
+            btnCorner.Parent = ButtonFrame
+            
+            local Button = Instance.new("TextButton")
+            Button.Name = config.Name
+            Button.Text = config.Name
+            Button.Font = Enum.Font.GothamBold
+            Button.TextColor3 = Theme.Text
+            Button.TextSize = 13
+            Button.BackgroundColor3 = Theme.Success
+            Button.Size = UDim2.new(1, -10, 1, -10)
+            Button.Position = UDim2.new(0, 5, 0, 5)
+            Button.Parent = ButtonFrame
+            
+            local btnInnerCorner = Instance.new("UICorner")
+            btnInnerCorner.CornerRadius = UDim.new(0, 8)
+            btnInnerCorner.Parent = Button
+            
+            Button.MouseButton1Click:Connect(function()
+                pcall(config.Callback)
             end)
             
-            if success then
-                executed = executed + 1
-            else
-                failed = failed + 1
-                if ScriptHub.Settings.DebugMode then
-                    warn("Erro em " .. scriptData.Name .. ": " .. err)
+            return Button
+        end
+        
+        -- Função para criar Toggle
+        function Tab:CreateToggle(config)
+            config = config or {}
+            config.Name = config.Name or "Toggle"
+            config.CurrentValue = config.CurrentValue or false
+            config.Callback = config.Callback or function(value) end
+            
+            local ToggleFrame = Instance.new("Frame")
+            ToggleFrame.BackgroundColor3 = Theme.Primary
+            ToggleFrame.Size = UDim2.new(1, -10, 0, 40)
+            ToggleFrame.Parent = TabContent
+            
+            local toggleCorner = Instance.new("UICorner")
+            toggleCorner.CornerRadius = UDim.new(0, 10)
+            toggleCorner.Parent = ToggleFrame
+            
+            local ToggleLabel = Instance.new("TextLabel")
+            ToggleLabel.Text = config.Name
+            ToggleLabel.Font = Enum.Font.Gotham
+            ToggleLabel.TextColor3 = Theme.Text
+            ToggleLabel.TextSize = 13
+            ToggleLabel.BackgroundTransparency = 1
+            ToggleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+            ToggleLabel.Position = UDim2.new(0, 10, 0, 0)
+            ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+            ToggleLabel.Parent = ToggleFrame
+            
+            local ToggleButton = Instance.new("TextButton")
+            ToggleButton.Text = ""
+            ToggleButton.BackgroundColor3 = config.CurrentValue and Theme.Success or Theme.Error
+            ToggleButton.Size = UDim2.new(0, 50, 0, 25)
+            ToggleButton.Position = UDim2.new(1, -60, 0.5, -12.5)
+            ToggleButton.Parent = ToggleFrame
+            
+            local toggleBtnCorner = Instance.new("UICorner")
+            toggleBtnCorner.CornerRadius = UDim.new(1, 0)
+            toggleBtnCorner.Parent = ToggleButton
+            
+            local ToggleIndicator = Instance.new("Frame")
+            ToggleIndicator.BackgroundColor3 = Theme.Text
+            ToggleIndicator.Size = UDim2.new(0, 21, 0, 21)
+            ToggleIndicator.Position = config.CurrentValue and UDim2.new(1, -23, 0.5, -10.5) or UDim2.new(0, 2, 0.5, -10.5)
+            ToggleIndicator.Parent = ToggleButton
+            
+            local indicatorCorner = Instance.new("UICorner")
+            indicatorCorner.CornerRadius = UDim.new(1, 0)
+            indicatorCorner.Parent = ToggleIndicator
+            
+            local toggled = config.CurrentValue
+            
+            ToggleButton.MouseButton1Click:Connect(function()
+                toggled = not toggled
+                
+                TweenService:Create(ToggleIndicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                    Position = toggled and UDim2.new(1, -23, 0.5, -10.5) or UDim2.new(0, 2, 0.5, -10.5)
+                }):Play()
+                
+                TweenService:Create(ToggleButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                    BackgroundColor3 = toggled and Theme.Success or Theme.Error
+                }):Play()
+                
+                pcall(config.Callback, toggled)
+            end)
+            
+            return {
+                Set = function(value)
+                    toggled = value
+                    ToggleIndicator.Position = toggled and UDim2.new(1, -23, 0.5, -10.5) or UDim2.new(0, 2, 0.5, -10.5)
+                    ToggleButton.BackgroundColor3 = toggled and Theme.Success or Theme.Error
                 end
-            end
+            }
         end
+        
+        -- Função para criar Slider
+        function Tab:CreateSlider(config)
+            config = config or {}
+            config.Name = config.Name or "Slider"
+            config.Range = config.Range or {0, 100}
+            config.Increment = config.Increment or 1
+            config.CurrentValue = config.CurrentValue or config.Range[1]
+            config.Callback = config.Callback or function(value) end
+            
+            local SliderFrame = Instance.new("Frame")
+            SliderFrame.BackgroundColor3 = Theme.Primary
+            SliderFrame.Size = UDim2.new(1, -10, 0, 55)
+            SliderFrame.Parent = TabContent
+            
+            local sliderCorner = Instance.new("UICorner")
+            sliderCorner.CornerRadius = UDim.new(0, 10)
+            sliderCorner.Parent = SliderFrame
+            
+            local SliderLabel = Instance.new("TextLabel")
+            SliderLabel.Text = config.Name
+            SliderLabel.Font = Enum.Font.Gotham
+            SliderLabel.TextColor3 = Theme.Text
+            SliderLabel.TextSize = 13
+            SliderLabel.BackgroundTransparency = 1
+            SliderLabel.Size = UDim2.new(0.6, 0, 0, 20)
+            SliderLabel.Position = UDim2.new(0, 10, 0, 5)
+            SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+            SliderLabel.Parent = SliderFrame
+            
+            local ValueLabel = Instance.new("TextLabel")
+            ValueLabel.Text = tostring(config.CurrentValue)
+            ValueLabel.Font = Enum.Font.GothamBold
+            ValueLabel.TextColor3 = Theme.Text
+            ValueLabel.TextSize = 13
+            ValueLabel.BackgroundTransparency = 1
+            ValueLabel.Size = UDim2.new(0.3, 0, 0, 20)
+            ValueLabel.Position = UDim2.new(0.7, 0, 0, 5)
+            ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+            ValueLabel.Parent = SliderFrame
+            
+            local SliderBack = Instance.new("Frame")
+            SliderBack.BackgroundColor3 = Theme.Secondary
+            SliderBack.Size = UDim2.new(1, -20, 0, 6)
+            SliderBack.Position = UDim2.new(0, 10, 1, -15)
+            SliderBack.Parent = SliderFrame
+            
+            local sliderBackCorner = Instance.new("UICorner")
+            sliderBackCorner.CornerRadius = UDim.new(1, 0)
+            sliderBackCorner.Parent = SliderBack
+            
+            local SliderFill = Instance.new("Frame")
+            SliderFill.BackgroundColor3 = Theme.Success
+            SliderFill.Size = UDim2.new(0, 0, 1, 0)
+            SliderFill.Parent = SliderBack
+            
+            local sliderFillCorner = Instance.new("UICorner")
+            sliderFillCorner.CornerRadius = UDim.new(1, 0)
+            sliderFillCorner.Parent = SliderFill
+            
+            local currentValue = config.CurrentValue
+            
+            local function UpdateSlider(input)
+                local sizeX = math.clamp((input.Position.X - SliderBack.AbsolutePosition.X) / SliderBack.AbsoluteSize.X, 0, 1)
+                local value = math.floor(config.Range[1] + (config.Range[2] - config.Range[1]) * sizeX)
+                value = math.floor(value / config.Increment + 0.5) * config.Increment
+                
+                currentValue = value
+                ValueLabel.Text = tostring(value)
+                SliderFill.Size = UDim2.new(sizeX, 0, 1, 0)
+                
+                pcall(config.Callback, value)
+            end
+            
+            local dragging = false
+            
+            SliderBack.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = true
+                    UpdateSlider(input)
+                end
+            end)
+            
+            SliderBack.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = false
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    UpdateSlider(input)
+                end
+            end)
+            
+            -- Inicializar valor
+            local initialPercent = (config.CurrentValue - config.Range[1]) / (config.Range[2] - config.Range[1])
+            SliderFill.Size = UDim2.new(initialPercent, 0, 1, 0)
+            
+            return {
+                Set = function(value)
+                    currentValue = value
+                    ValueLabel.Text = tostring(value)
+                    local percent = (value - config.Range[1]) / (config.Range[2] - config.Range[1])
+                    SliderFill.Size = UDim2.new(percent, 0, 1, 0)
+                end
+            }
+        end
+        
+        -- Função para criar Label
+        function Tab:CreateLabel(text)
+            local LabelFrame = Instance.new("Frame")
+            LabelFrame.BackgroundColor3 = Theme.Primary
+            LabelFrame.Size = UDim2.new(1, -10, 0, 35)
+            LabelFrame.Parent = TabContent
+            
+            local labelCorner = Instance.new("UICorner")
+            labelCorner.CornerRadius = UDim.new(0, 10)
+            labelCorner.Parent = LabelFrame
+            
+            local Label = Instance.new("TextLabel")
+            Label.Text = text or "Label"
+            Label.Font = Enum.Font.Gotham
+            Label.TextColor3 = Theme.Text
+            Label.TextSize = 13
+            Label.BackgroundTransparency = 1
+            Label.Size = UDim2.new(1, -10, 1, 0)
+            Label.Position = UDim2.new(0, 10, 0, 0)
+            Label.TextXAlignment = Enum.TextXAlignment.Left
+            Label.TextWrapped = true
+            Label.Parent = LabelFrame
+            
+            return {
+                Set = function(newText)
+                    Label.Text = newText
+                end
+            }
+        end
+        
+        -- Função para criar Paragraph
+        function Tab:CreateParagraph(config)
+            config = config or {}
+            config.Title = config.Title or "Paragraph"
+            config.Content = config.Content or "Content"
+            
+            local ParagraphFrame = Instance.new("Frame")
+            ParagraphFrame.BackgroundColor3 = Theme.Primary
+            ParagraphFrame.Size = UDim2.new(1, -10, 0, 70)
+            ParagraphFrame.Parent = TabContent
+            
+            local paraCorner = Instance.new("UICorner")
+            paraCorner.CornerRadius = UDim.new(0, 10)
+            paraCorner.Parent = ParagraphFrame
+            
+            local TitleLabel = Instance.new("TextLabel")
+            TitleLabel.Text = config.Title
+            TitleLabel.Font = Enum.Font.GothamBold
+            TitleLabel.TextColor3 = Theme.Text
+            TitleLabel.TextSize = 14
+            TitleLabel.BackgroundTransparency = 1
+            TitleLabel.Size = UDim2.new(1, -10, 0, 20)
+            TitleLabel.Position = UDim2.new(0, 10, 0, 5)
+            TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+            TitleLabel.Parent = ParagraphFrame
+            
+            local ContentLabel = Instance.new("TextLabel")
+            ContentLabel.Text = config.Content
+            ContentLabel.Font = Enum.Font.Gotham
+            ContentLabel.TextColor3 = Theme.Text
+            ContentLabel.TextSize = 12
+            ContentLabel.BackgroundTransparency = 1
+            ContentLabel.Size = UDim2.new(1, -10, 1, -30)
+            ContentLabel.Position = UDim2.new(0, 10, 0, 25)
+            ContentLabel.TextXAlignment = Enum.TextXAlignment.Left
+            ContentLabel.TextYAlignment = Enum.TextYAlignment.Top
+            ContentLabel.TextWrapped = true
+            ContentLabel.Parent = ParagraphFrame
+            
+            return {
+                Set = function(newConfig)
+                    TitleLabel.Text = newConfig.Title or config.Title
+                    ContentLabel.Text = newConfig.Content or config.Content
+                end
+            }
+        end
+        
+        return Tab
     end
     
-    self:ShowNotification(string.format("Executados: %d | Falhas: %d", executed, failed), 
-                         failed == 0 and "success" or "error")
+    return Window
 end
 
--- Mostrar notificação
-function ScriptHub:ShowNotification(message, type)
-    local color
-    if type == "success" then
-        color = ScriptHub.Colors.Success
-    elseif type == "error" then
-        color = ScriptHub.Colors.Error
+-- Notificações
+function Library:Notify(config)
+    config = config or {}
+    config.Title = config.Title or "Notificação"
+    config.Content = config.Content or "Conteúdo da notificação"
+    config.Duration = config.Duration or 3
+    config.Image = config.Image or nil
+    
+    local NotifGui = Instance.new("ScreenGui")
+    NotifGui.Name = "Notification"
+    NotifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    if syn and syn.protect_gui then
+        syn.protect_gui(NotifGui)
+        NotifGui.Parent = CoreGui
+    elseif gethui then
+        NotifGui.Parent = gethui()
     else
-        color = ScriptHub.Colors.Accent
+        NotifGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
     end
     
-    local notification = Instance.new("Frame")
-    notification.Name = "Notification"
-    notification.BackgroundColor3 = color
-    notification.Size = UDim2.new(0.4, 0, 0, 50)
-    notification.Position = UDim2.new(0.3, 0, 1, 10)
-    notification.Parent = self.Gui
+    local NotifFrame = Instance.new("Frame")
+    NotifFrame.BackgroundColor3 = Theme.Primary
+    NotifFrame.Size = UDim2.new(0, 300, 0, 80)
+    NotifFrame.Position = UDim2.new(1, 10, 1, -90)
+    NotifFrame.Parent = NotifGui
     
     local notifCorner = Instance.new("UICorner")
-    notifCorner.CornerRadius = UDim.new(0, 8)
-    notifCorner.Parent = notification
+    notifCorner.CornerRadius = UDim.new(0, 12)
+    notifCorner.Parent = NotifFrame
     
-    local textLabel = Instance.new("TextLabel")
-    textLabel.Text = message
-    textLabel.Font = Enum.Font.Gotham
-    textLabel.TextColor3 = ScriptHub.Colors.Text
-    textLabel.TextSize = 12
-    textLabel.BackgroundTransparency = 1
-    textLabel.Size = UDim2.new(1, 0, 1, 0)
-    textLabel.Parent = notification
+    local notifStroke = Instance.new("UIStroke")
+    notifStroke.Color = Theme.Accent
+    notifStroke.Thickness = 2
+    notifStroke.Parent = NotifFrame
     
-    -- Animação
-    notification:TweenPosition(UDim2.new(0.3, 0, 0.8, 0), "Out", "Quad", 0.5)
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Text = config.Title
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.TextColor3 = Theme.Text
+    TitleLabel.TextSize = 14
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Size = UDim2.new(1, -10, 0, 25)
+    TitleLabel.Position = UDim2.new(0, 10, 0, 5)
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.Parent = NotifFrame
     
-    task.wait(3)
+    local ContentLabel = Instance.new("TextLabel")
+    ContentLabel.Text = config.Content
+    ContentLabel.Font = Enum.Font.Gotham
+    ContentLabel.TextColor3 = Theme.Text
+    ContentLabel.TextSize = 12
+    ContentLabel.BackgroundTransparency = 1
+    ContentLabel.Size = UDim2.new(1, -10, 1, -30)
+    ContentLabel.Position = UDim2.new(0, 10, 0, 25)
+    ContentLabel.TextXAlignment = Enum.TextXAlignment.Left
+    ContentLabel.TextYAlignment = Enum.TextYAlignment.Top
+    ContentLabel.TextWrapped = true
+    ContentLabel.Parent = NotifFrame
     
-    notification:TweenPosition(UDim2.new(0.3, 0, 1, 10), "Out", "Quad", 0.5)
+    -- Animação de entrada
+    TweenService:Create(NotifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Position = UDim2.new(1, -310, 1, -90)
+    }):Play()
+    
+    -- Animação de saída
+    task.wait(config.Duration)
+    
+    TweenService:Create(NotifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Position = UDim2.new(1, 10, 1, -90)
+    }):Play()
+    
     task.wait(0.5)
-    notification:Destroy()
+    NotifGui:Destroy()
 end
 
--- Métodos públicos
-function ScriptHub:AddCategory(name)
-    ScriptHub.Settings.DefaultScripts[name] = {}
-end
-
-function ScriptHub:AddScript(category, name, func)
-    if not ScriptHub.Settings.DefaultScripts[category] then
-        self:AddCategory(category)
-    end
-    
-    table.insert(ScriptHub.Settings.DefaultScripts[category], {
-        Name = name,
-        Function = func
-    })
-end
-
-function ScriptHub:Toggle()
-    if self.Gui and self.Gui.Parent then
-        self.Gui:Destroy()
-        self.Gui = nil
-    else
-        self:CreateGUI()
-    end
-end
-
--- Inicializar tecla de atalho
-function ScriptHub:BindKey(keyCode)
-    game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-        if not gameProcessed and input.KeyCode == keyCode then
-            self:Toggle()
-        end
-    end)
-end
-
--- Criar instância padrão
-local DefaultHub = setmetatable({}, ScriptHub)
-DefaultHub:CreateGUI()
-DefaultHub:BindKey(Enum.KeyCode.RightShift)
-
--- Interface de usuário (para facilitar o uso)
-getgenv().ScriptHub = {
-    Toggle = function() DefaultHub:Toggle() end,
-    AddScript = function(category, name, func) DefaultHub:AddScript(category, name, func) end,
-    AddCategory = function(name) DefaultHub:AddCategory(name) end,
-    ShowNotification = function(message, type) DefaultHub:ShowNotification(message, type) end
-}
-
--- Retornar a biblioteca
-return ScriptHub
+return Library
