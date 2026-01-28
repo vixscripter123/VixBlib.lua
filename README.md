@@ -140,6 +140,7 @@ function Library:CriarSistemaKey(configuracao)
     configuracao.SalvarKey = configuracao.SalvarKey or true
     configuracao.NomeArquivo = configuracao.NomeArquivo or "ChaveScript"
     configuracao.LinkKey = configuracao.LinkKey or nil
+    configuracao.CarregarMenu = configuracao.CarregarMenu or function() end
     
     local keyValida = false
     
@@ -151,9 +152,8 @@ function Library:CriarSistemaKey(configuracao)
         
         if sucesso and keySalva == configuracao.KeyCorreta then
             keyValida = true
-            if configuracao.Callback then
-                task.spawn(configuracao.Callback, true)
-            end
+            -- Carregar menu automaticamente
+            task.spawn(configuracao.CarregarMenu)
             return
         end
     end
@@ -307,7 +307,7 @@ function Library:CriarSistemaKey(configuracao)
         local keyDigitada = InputKey.Text
         
         if keyDigitada == configuracao.KeyCorreta then
-            Status.Text = "✓ Key válida! Carregando..."
+            Status.Text = "✓ Key válida! Carregando menu..."
             Status.TextColor3 = Cores.Sucesso
             keyValida = true
             
@@ -317,12 +317,21 @@ function Library:CriarSistemaKey(configuracao)
                 end)
             end
             
-            task.wait(1)
+            -- Animação de fade out
+            TweenService:Create(FrameKey, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {
+                Size = UDim2.new(0, 0, 0, 0),
+                Position = UDim2.new(0.5, 0, 0.5, 0)
+            }):Play()
+            
+            TweenService:Create(Fundo, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {
+                BackgroundTransparency = 1
+            }):Play()
+            
+            task.wait(0.5)
             KeyGui:Destroy()
             
-            if configuracao.Callback then
-                task.spawn(configuracao.Callback, true)
-            end
+            -- Carregar menu principal automaticamente
+            task.spawn(configuracao.CarregarMenu)
         else
             Status.Text = "✗ Key inválida! Tente novamente"
             Status.TextColor3 = Cores.Erro
